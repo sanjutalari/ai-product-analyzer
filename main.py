@@ -13,6 +13,7 @@ from price_history   import PriceHistoryTracker
 from scoring         import ScoreGenerator
 from llm_agent       import LLMAgent
 from web_search      import search_web_reviews
+from image_search    import fetch_product_images
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -61,12 +62,13 @@ async def analyze(req: AnalyzeRequest, bg: BackgroundTasks):
     # ── 3. Web search for reviews (whole internet) ─────────
     # Runs in parallel with price/history tasks
     web_reviews_task = search_web_reviews(product_name, max_results=10)
+    images_task      = fetch_product_images(product_name, max_images=8)
     rr_task          = ReviewAnalyzer().analyze(pd2.get("raw_reviews", []))
     pr_task          = PriceComparator().compare(product_name, pd2.get("price", ""), url)
     hi_task          = PriceHistoryTracker().get_history(url, pd2.get("price", ""))
 
-    web_reviews, rr, pr, hi = await asyncio.gather(
-        web_reviews_task, rr_task, pr_task, hi_task
+    web_reviews, rr, pr, hi, extra_images = await asyncio.gather(
+        web_reviews_task, rr_task, pr_task, hi_task, images_task
     )
 
     # ── 4. Merge all reviews ───────────────────────────────
@@ -111,7 +113,7 @@ async def analyze(req: AnalyzeRequest, bg: BackgroundTasks):
         "priceHistory":  hi.get("history", []),
         "webSources":    sources,
         "hasWebReviews": len(web_reviews) > 0,
-        "images": pd2.get("images", []),
+        "images": list(dict.fromkeys(pd2.get("images", []) + extra_images))[:8],
         "qualityIndicators": lr.get("quality_indicators", {}),
     }
 
@@ -125,3 +127,27 @@ def recent():
 @app.get("/", response_class=HTMLResponse)
 def index():
     return open("index.html").read()
+
+
+class ChatRequest(BaseModel):
+    message: str
+    product: str = ""
+
+@app.post("/api/chat")
+async def chat(req: ChatRequest):
+    """AI chat about a specific product."""
+    try:
+        from groq import Groq
+        client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+        prompt = f"""You are a helpful product advisor. Answer the user's question concisely and helpfully.
+Context: {req.message}
+Give a clear, direct answer in 2-4 sentences. Be specific and actionable."""
+        resp = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role":"user","content":prompt}],
+            max_tokens=300, temperature=0.4,
+        )
+        return {"reply": resp.choices[0].message.content.strip()}
+    except Exception as e:
+        log.error(f"Chat error: {e}")
+        return {"reply": "Sorry, I couldn't process that question. Please try again."}

@@ -12,25 +12,29 @@ class PriceComparator:
     async def compare(self, product_name, current_price, url):
         domain = urlparse(url).netloc.replace("www.", "").split(".")[0].capitalize()
 
+        query = product_name.replace(" ","+")[:60]
         prompt = f"""Generate realistic price comparisons for this product across platforms.
 
 Product: "{product_name}"
 Current price: {current_price} on {domain}
+Search query for URLs: {query}
 
 Return ONLY this JSON (no markdown, no extra text):
 {{
   "platforms": [
-    {{"name": "Amazon",   "icon": "🛒", "price": "$X.XX", "current": false}},
-    {{"name": "Best Buy", "icon": "🔵", "price": "$X.XX", "current": false}},
-    {{"name": "Walmart",  "icon": "🟡", "price": "$X.XX", "current": false}},
-    {{"name": "Target",   "icon": "🎯", "price": "$X.XX", "current": false}},
-    {{"name": "B&H",      "icon": "📷", "price": "$X.XX", "current": false}}
+    {{"name": "Amazon",   "icon": "🛒", "price": "$X.XX", "current": false, "url": "https://www.amazon.com/s?k={query}"}},
+    {{"name": "Best Buy", "icon": "🔵", "price": "$X.XX", "current": false, "url": "https://www.bestbuy.com/site/searchpage.jsp?st={query}"}},
+    {{"name": "Walmart",  "icon": "🟡", "price": "$X.XX", "current": false, "url": "https://www.walmart.com/search?q={query}"}},
+    {{"name": "Target",   "icon": "🎯", "price": "$X.XX", "current": false, "url": "https://www.target.com/s?searchTerm={query}"}},
+    {{"name": "B&H",      "icon": "📷", "price": "$X.XX", "current": false, "url": "https://www.bhphotovideo.com/c/search?q={query}"}},
+    {{"name": "Flipkart", "icon": "🛍️", "price": "$X.XX", "current": false, "url": "https://www.flipkart.com/search?q={query}"}},
+    {{"name": "eBay",     "icon": "🏷️", "price": "$X.XX", "current": false, "url": "https://www.ebay.com/sch/i.html?_nkw={query}"}}
   ],
   "best_price": "$X.XX",
   "best_platform": "Platform Name"
 }}
 
-Rules: mark {domain} as current:true and use {current_price} for it. Vary others by $5-$30."""
+Rules: mark {domain} as current:true and use {current_price} for it. Vary others by $5-$40. Include all 7 platforms."""
 
         try:
             raw = self.client.chat.completions.create(
