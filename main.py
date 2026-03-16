@@ -151,3 +151,22 @@ Give a clear, direct answer in 2-4 sentences. Be specific and actionable."""
     except Exception as e:
         log.error(f"Chat error: {e}")
         return {"reply": "Sorry, I couldn't process that question. Please try again."}
+
+
+@app.get("/api/imgproxy")
+async def img_proxy(url: str):
+    """Proxy product images to avoid CORS issues in browser."""
+    import httpx
+    from fastapi.responses import Response
+    try:
+        hdrs = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36"}
+        async with httpx.AsyncClient(headers=hdrs, follow_redirects=True, timeout=10) as c:
+            r = await c.get(url)
+            content_type = r.headers.get("content-type", "image/jpeg")
+            return Response(content=r.content, media_type=content_type,
+                          headers={"Cache-Control": "public, max-age=86400",
+                                   "Access-Control-Allow-Origin": "*"})
+    except Exception as e:
+        log.error(f"Image proxy error: {e}")
+        from fastapi import HTTPException
+        raise HTTPException(404, "Image not found")
