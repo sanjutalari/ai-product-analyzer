@@ -1,4 +1,4 @@
-import json, logging, os
+import json, logging, os, re
 from groq import Groq
 
 log = logging.getLogger(__name__)
@@ -8,7 +8,7 @@ class LLMAgent:
         self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
         self.model  = "llama-3.3-70b-versatile"
 
-    def _chat(self, prompt, max_tokens=1400):
+    def _chat(self, prompt, max_tokens=1600):
         r = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
@@ -24,12 +24,29 @@ class LLMAgent:
             raw = parts[1] if len(parts) > 1 else parts[0]
             if raw.startswith("json"):
                 raw = raw[4:]
-        start = raw.find("{")
-        end   = raw.rfind("}") + 1
-        return json.loads(raw[start:end])
+        s, e = raw.find("{"), raw.rfind("}") + 1
+        return json.loads(raw[s:e])
+
+    def _extract_product_from_url(self, url):
+        """Use AI to identify product from URL structure alone."""
+        prompt = f"""Given this product URL: {url}
+
+Extract the product name. Look at:
+- The URL path for product name keywords
+- Any ASIN codes (Amazon)
+- Product IDs or slugs
+
+Return ONLY a JSON object:
+{{"product_name": "Full product name you can identify", "brand": "Brand name", "category": "Product category", "confidence": "high/medium/low"}}
+
+If you recognize an Amazon ASIN, use your knowledge to identify the exact product."""
+        try:
+            return self._parse_json(self._chat(prompt, max_tokens=200))
+        except:
+            return {"product_name": "", "brand": "", "category": "", "confidence": "low"}
 
     async def analyze(self, pd):
-        name   = pd.get("name", "Unknown")
+        name   = pd.get("name", "")
         price  = pd.get("price", "")
         asin   = pd.get("asin", "")
         url    = pd.get("url", "")
@@ -38,82 +55,77 @@ class LLMAgent:
         revs   = json.dumps(pd.get("raw_reviews", [])[:5])
         spec_t = "\n".join(f"  {k}: {v}" for k, v in list(specs.items())[:12]) or "  N/A"
 
-        # Build context — use ASIN if we have it so AI can identify the product
-        product_ref = ""
-        if asin:
-            product_ref = f"Amazon ASIN: {asin} (use your knowledge to identify this product)"
-        elif name and name != "Product" and "ASIN" not in name:
-            product_ref = f"Product name: {name}"
-        else:
-            product_ref = f"Product URL: {url}"
+        # If no good product name, extract it from URL first
+        if not name or name == "Product" or "ASIN" in name or len(name) < 5:
+            url_info = self._extract_product_from_url(url)
+            if url_info.get("product_name"):
+                name = url_info["product_name"]
+                pd["name"] = name
 
-        prompt = f"""You are an expert product analyst with deep knowledge of consumer electronics, 
-gadgets, and products sold on Amazon and other retailers.
+        prompt = f"""You are an expert product analyst. Analyze this product thoroughly.
 
-{product_ref}
+Product: {name}
+{f'Amazon ASIN: {asin}' if asin else ''}
 {f'Price: {price}' if price else ''}
+{f'URL: {url}' if url else ''}
 {f'Description: {desc}' if desc else ''}
 Specifications:
 {spec_t}
-Customer reviews sample: {revs}
+Reviews sample: {revs}
 
-IMPORTANT: If this is a well-known product (identified by ASIN or name), use your full knowledge 
-of this product to provide accurate, detailed analysis. Do not make up information.
+Use your comprehensive knowledge of this product (especially if it is a well-known item).
+If you can identify the product from the ASIN or name, provide accurate real-world details.
+Research-quality analysis with specific features, real pros/cons, and accurate pricing.
 
-Return ONLY a valid JSON object, no markdown, no explanation:
+Return ONLY valid JSON, no markdown:
 {{
-  "productName": "Full official product name",
+  "productName": "Official full product name",
+  "brand": "Brand name",
   "estimatedPrice": "$X.XX",
-  "summary": "2-3 sentence expert analysis covering key strengths, weaknesses, and ideal use case",
-  "pros": [
-    "Specific pro with real detail",
-    "Specific pro 2",
-    "Specific pro 3",
-    "Specific pro 4"
-  ],
-  "cons": [
-    "Specific con with real detail",
-    "Specific con 2",
-    "Specific con 3"
-  ],
-  "ideal_buyer": "One sentence: who should buy this product",
-  "avoid_if": "One sentence: who should NOT buy this",
-  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+  "summary": "3 sentence expert verdict covering performance, value, and ideal use case",
+  "pros": ["Detailed pro 1", "Detailed pro 2", "Detailed pro 3", "Detailed pro 4", "Detailed pro 5"],
+  "cons": ["Real con 1", "Real con 2", "Real con 3"],
+  "ideal_buyer": "Specific one-sentence buyer profile",
+  "avoid_if": "Specific one-sentence avoid profile",
+  "tags": ["tag1","tag2","tag3","tag4","tag5","tag6"],
   "avg_rating": 4.3,
-  "review_count": "2,500+",
+  "review_count": "2,847",
+  "category": "Product category",
   "quality_indicators": {{
     "build_quality": 80,
     "performance": 85,
     "value_for_money": 75,
     "reliability": 80
-  }}
+  }},
+  "key_specs": [
+    {{"label": "Spec name", "value": "Spec value"}},
+    {{"label": "Spec name", "value": "Spec value"}},
+    {{"label": "Spec name", "value": "Spec value"}},
+    {{"label": "Spec name", "value": "Spec value"}}
+  ]
 }}"""
-
         try:
             p = self._parse_json(self._chat(prompt))
-            # Merge AI-identified name back if scraper didn't get one
-            if p.get("productName") and (not pd.get("name") or
-               pd.get("name") == "Product" or "ASIN" in pd.get("name", "")):
+            if p.get("productName") and (not pd.get("name") or pd.get("name") == "Product" or "ASIN" in pd.get("name", "")):
                 pd["name"] = p["productName"]
-            # Fill in price if scraper missed it
             if not price and p.get("estimatedPrice"):
                 pd["price"] = p["estimatedPrice"]
-            if len(p.get("tags", [])) < 3 and pd.get("tags"):
-                p["tags"] = list(set(p.get("tags", []) + pd["tags"]))[:8]
             return p
         except Exception as e:
             log.error(f"LLMAgent.analyze: {e}")
             return {
-                "productName": name,
+                "productName": name or "Product",
+                "brand": "",
                 "estimatedPrice": price,
                 "summary": f"Analysis of {name}. Please try again.",
-                "pros":  ["Product available for purchase"],
-                "cons":  ["Could not complete full analysis — please retry"],
-                "ideal_buyer": "Please verify product details before purchasing.",
-                "avoid_if":    "You need detailed specs before buying.",
-                "tags":  pd.get("tags", []),
+                "pros": ["Product available for purchase"],
+                "cons": ["Could not complete full analysis"],
+                "ideal_buyer": "Please verify product details.",
+                "avoid_if": "You need detailed specs before buying.",
+                "tags": pd.get("tags", []),
                 "avg_rating": 0,
                 "review_count": "0",
-                "quality_indicators": {"build_quality": 50, "performance": 50,
-                                        "value_for_money": 50, "reliability": 50}
+                "category": "",
+                "quality_indicators": {"build_quality":50,"performance":50,"value_for_money":50,"reliability":50},
+                "key_specs": []
             }

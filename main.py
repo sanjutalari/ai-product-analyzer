@@ -12,6 +12,7 @@ from price_compare   import PriceComparator
 from price_history   import PriceHistoryTracker
 from scoring         import ScoreGenerator
 from llm_agent       import LLMAgent
+from reddit_scraper  import search_reddit_reviews
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ async def lifespan(app: FastAPI):
     log.info("Database ready")
     yield
 
-app = FastAPI(title="AI Product Analyzer", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="AI Product Analyzer", version="2.0.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"],
                    allow_methods=["*"], allow_headers=["*"])
 
@@ -40,51 +41,81 @@ async def analyze(req: AnalyzeRequest, bg: BackgroundTasks):
     if not url:
         raise HTTPException(400, "URL is required")
 
+    # Cache check
     if not req.force_refresh:
         cached = get_product_analysis(url)
         if cached:
             return {"source": "cache", "data": cached}
 
-    # Scrape (with fallback to URL-based analysis)
-    scraper  = ProductScraper()
-    pd2      = await scraper.scrape(url)
-    pd2["url"] = url  # always preserve original URL
+    # ── Step 1: Scrape product page ──────────────────────────
+    scraper = ProductScraper()
+    pd2     = await scraper.scrape(url)
+    pd2["url"] = url
 
-    # AI analysis — works even without scraped data using product knowledge
-    lr  = await LLMAgent().analyze(pd2)
-
-    # Use AI-identified name if scraper couldn't get it
+    # ── Step 2: AI analysis (uses product knowledge if scrape failed) ──
+    lr           = await LLMAgent().analyze(pd2)
     product_name = lr.get("productName") or pd2.get("name", "Unknown Product")
 
-    # Update pd2 with AI-enriched data for downstream modules
+    # Update price from AI if scraper missed it
     if lr.get("estimatedPrice") and not pd2.get("price"):
         pd2["price"] = lr["estimatedPrice"]
 
-    rr  = await ReviewAnalyzer().analyze(pd2.get("raw_reviews", []))
-    pr  = await PriceComparator().compare(product_name, pd2.get("price", ""), url)
-    hi  = await PriceHistoryTracker().get_history(url, pd2.get("price", ""))
-    sc  = ScoreGenerator().generate(pd2, lr, rr, pr)
+    # ── Step 3: Reddit reviews (runs in parallel with other tasks) ──
+    reddit_task = search_reddit_reviews(product_name, max_results=6)
+
+    # ── Step 4: Review analysis from scraped reviews ─────────
+    rr_task = ReviewAnalyzer().analyze(pd2.get("raw_reviews", []))
+
+    # ── Step 5: Price comparison ─────────────────────────────
+    pr_task = PriceComparator().compare(product_name, pd2.get("price", ""), url)
+
+    # ── Step 6: Price history ─────────────────────────────────
+    hi_task = PriceHistoryTracker().get_history(url, pd2.get("price", ""))
+
+    # Run all async tasks in parallel
+    import asyncio
+    reddit_reviews, rr, pr, hi = await asyncio.gather(
+        reddit_task, rr_task, pr_task, hi_task
+    )
+
+    # ── Step 7: Merge reviews — Reddit + scraped ─────────────
+    scraped_reviews = rr.get("reviews", [])
+    all_reviews     = scraped_reviews + reddit_reviews
+
+    # Re-analyze combined reviews if we got Reddit data
+    if reddit_reviews:
+        all_ratings = [r.get("rating", 3) for r in all_reviews if r.get("rating")]
+        combined_avg = round(sum(all_ratings) / len(all_ratings), 1) if all_ratings else rr.get("avg_rating", 0)
+        rr["avg_rating"]    = combined_avg
+        rr["review_count"]  = f"{len(all_reviews)}+"
+        rr["reviews"]       = all_reviews[:10]
+        log.info(f"Combined {len(scraped_reviews)} scraped + {len(reddit_reviews)} Reddit reviews")
+
+    # ── Step 8: Score ─────────────────────────────────────────
+    sc = ScoreGenerator().generate(pd2, lr, rr, pr)
 
     result = {
-        "url":          url,
-        "productName":  product_name,
-        "score":        sc["score"],
-        "valueScore":   sc["value_score"],
-        "avgRating":    lr.get("avg_rating") or rr.get("avg_rating", 0),
-        "reviewCount":  lr.get("review_count") or rr.get("review_count", "0"),
-        "currentPrice": pd2.get("price", ""),
-        "bestPrice":    pr.get("best_price", ""),
-        "lowestPrice":  hi.get("lowest", ""),
-        "highestPrice": hi.get("highest", ""),
-        "summary":      lr.get("summary", ""),
-        "pros":         lr.get("pros", []),
-        "cons":         lr.get("cons", []),
-        "idealBuyer":   lr.get("ideal_buyer", ""),
-        "avoidIf":      lr.get("avoid_if", ""),
-        "tags":         lr.get("tags") or pd2.get("tags", []),
-        "reviews":      rr.get("reviews", []),
-        "platforms":    pr.get("platforms", []),
-        "priceHistory": hi.get("history", []),
+        "url":           url,
+        "productName":   product_name,
+        "score":         sc["score"],
+        "valueScore":    sc["value_score"],
+        "avgRating":     lr.get("avg_rating") or rr.get("avg_rating", 0),
+        "reviewCount":   rr.get("review_count", "0"),
+        "currentPrice":  pd2.get("price", ""),
+        "bestPrice":     pr.get("best_price", ""),
+        "lowestPrice":   hi.get("lowest", ""),
+        "highestPrice":  hi.get("highest", ""),
+        "summary":       lr.get("summary", ""),
+        "pros":          lr.get("pros", []),
+        "cons":          lr.get("cons", []),
+        "idealBuyer":    lr.get("ideal_buyer", ""),
+        "avoidIf":       lr.get("avoid_if", ""),
+        "tags":          lr.get("tags") or pd2.get("tags", []),
+        "reviews":       rr.get("reviews", []),
+        "platforms":     pr.get("platforms", []),
+        "priceHistory":  hi.get("history", []),
+        "redditReviews": len(reddit_reviews) > 0,
+        "redditCount":   len(reddit_reviews),
     }
 
     bg.add_task(save_product_analysis, url, result)

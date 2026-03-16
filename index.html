@@ -4,331 +4,671 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>AI Product Analyzer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0a0a0f;--s:#111118;--s2:#1a1a24;--s3:#22222f;--b:rgba(255,255,255,.07);--b2:rgba(255,255,255,.12);--ac:#7c6af7;--ac2:#a594f9;--ac3:#c4b5fd;--gn:#22d3a0;--rd:#f87171;--am:#fbbf24;--tx:#f0effe;--mt:#7c7c9a;--mt2:#a0a0bc}
-body{background:var(--bg);color:var(--tx);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh}
-.app{max-width:860px;margin:0 auto;padding:2rem 1.5rem 5rem}
-.header{display:flex;align-items:center;gap:14px;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--b)}
-.logo{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,var(--ac),var(--ac2));display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.header-text h1{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;letter-spacing:-.5px}
-.header-text p{font-size:12px;color:var(--mt);margin-top:2px}
-.badge{margin-left:auto;padding:4px 11px;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.3);border-radius:20px;font-size:11px;color:var(--ac3);font-weight:500;white-space:nowrap}
-.card{background:var(--s);border:1px solid var(--b2);border-radius:13px;padding:1.3rem;margin-bottom:1rem}
-.lbl{font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.8px;font-weight:500;margin-bottom:8px}
-.input-row{display:flex;gap:8px}
-input[type=text]{flex:1;background:var(--s2);border:1px solid var(--b2);border-radius:9px;padding:11px 14px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
-input[type=text]:focus{border-color:var(--ac)}
-input[type=text]::placeholder{color:var(--mt)}
-.btn{background:var(--ac);color:#fff;border:none;border-radius:9px;padding:11px 20px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:7px}
-.btn:hover:not(:disabled){background:#6b59e8;transform:translateY(-1px)}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
-.chip{background:var(--s2);border:1px solid var(--b);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--mt2);cursor:pointer;transition:all .15s}
-.chip:hover{border-color:var(--ac);color:var(--ac3);background:rgba(124,106,247,.08)}
-.spinner{width:34px;height:34px;border:2px solid var(--b2);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.fade-in{animation:fi .35s ease both}
-@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.score-hero{background:var(--s);border:1px solid var(--b2);border-radius:13px;padding:1.5rem;display:flex;align-items:center;gap:1.5rem;margin-bottom:.75rem}
-.score-ring{position:relative;width:88px;height:88px;flex-shrink:0}
-.score-ring svg{transform:rotate(-90deg);width:88px;height:88px}
-.score-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.snum{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1}
-.ssub{font-size:9px;color:var(--mt);margin-top:2px}
-.score-info h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px}
-.purl{font-size:10px;color:var(--mt);margin-bottom:9px;word-break:break-all}
-.vbadge{display:inline-flex;align-items:center;font-size:12px;font-weight:600;padding:4px 13px;border-radius:20px}
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:.75rem}
-@media(max-width:520px){.metrics{grid-template-columns:repeat(2,1fr)}}
-.mcard{background:var(--s);border:1px solid var(--b);border-radius:9px;padding:11px 13px}
-.mlbl{font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
-.mval{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
-.summary{background:rgba(124,106,247,.07);border:1px solid rgba(124,106,247,.2);border-radius:12px;padding:14px;margin-bottom:.75rem;font-size:13.5px;color:var(--mt2);line-height:1.7}
-.tabs{display:flex;gap:4px;background:var(--s);border:1px solid var(--b);border-radius:11px;padding:4px;margin-bottom:1rem}
-.tab{flex:1;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:500;color:var(--mt);cursor:pointer;text-align:center;border:none;background:none;font-family:'DM Sans',sans-serif;transition:all .15s}
-.tab.on{background:var(--s3);color:var(--tx);border:1px solid var(--b2)}
-.tp{display:none}.tp.on{display:block}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
-@media(max-width:500px){.two{grid-template-columns:1fr}}
-.panel{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:1rem}
-.ptitle{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--mt);font-weight:600;margin-bottom:10px}
-.pci{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--b);font-size:13px;color:var(--mt2);line-height:1.5}
-.pci:last-child{border:none;padding-bottom:0}
-.pdot{width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:1px;font-weight:700}
-.pro{background:rgba(34,211,160,.15);color:var(--gn)}
-.con{background:rgba(248,113,113,.15);color:var(--rd)}
-.rev{padding:10px 0;border-bottom:1px solid var(--b)}
-.rev:last-child{border:none}
-.rh{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.stars{color:var(--am);font-size:11px;letter-spacing:1px}
-.rname{font-size:12px;color:var(--mt2);font-weight:500}
-.rsnt{margin-left:auto;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
-.sp{background:rgba(34,211,160,.1);color:var(--gn)}
-.sn{background:rgba(248,113,113,.1);color:var(--rd)}
-.su{background:rgba(165,148,249,.1);color:var(--ac2)}
-.rt{font-size:13px;color:var(--mt);line-height:1.5}
-.pr{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--b);margin-bottom:6px}
-.pr.best{border-color:rgba(34,211,160,.3);background:rgba(34,211,160,.05)}
-.pr.cur{border-color:rgba(124,106,247,.3);background:rgba(124,106,247,.05)}
-.pico{font-size:16px;flex-shrink:0}
-.pname{flex:1;font-size:13px;font-weight:500}
-.pprice{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
-.btag{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(34,211,160,.15);color:var(--gn);font-weight:600}
-.hbars{display:flex;align-items:flex-end;gap:4px;height:90px;margin-bottom:8px}
-.hbw{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end}
-.hb{width:100%;border-radius:4px 4px 0 0}
-.hm{font-size:10px;color:var(--mt)}
-.hp{font-size:10px;color:var(--mt2)}
-.hmeta{font-size:12px;color:var(--mt)}
-.tags{display:flex;flex-wrap:wrap;gap:5px}
-.tag{padding:3px 10px;border-radius:20px;font-size:12px;display:inline-block}
-.thi{background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.25);color:var(--ac3)}
-.tlo{background:var(--s2);border:1px solid var(--b2);color:var(--mt2)}
-.ibox{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:.75rem}
-@media(max-width:500px){.ibox{grid-template-columns:1fr}}
-.ib{border-radius:10px;padding:12px}
-.ib-g{background:rgba(34,211,160,.05);border:1px solid rgba(34,211,160,.2)}
-.ib-r{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2)}
-.ib-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:5px}
-.ib-val{font-size:12px;color:var(--mt2);line-height:1.5}
-.err{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.25);border-radius:12px;padding:1.5rem;text-align:center;color:var(--rd);display:none}
-.err.on{display:block}
-.empty{text-align:center;padding:4rem 1rem;color:var(--mt)}
-.empty h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--mt2);margin-bottom:8px}
-.empty p{font-size:13px;line-height:1.6;max-width:320px;margin:0 auto}
-.hide{display:none}
+:root{
+  --ac:#7c6af7;--ac2:#a594f9;--ac3:#c4b5fd;
+  --gn:#22d3a0;--rd:#f87171;--am:#fbbf24;
+  --bg:#0a0a0f;--s:#111118;--s2:#1a1a24;--s3:#22222f;
+  --tx:#f0effe;--mt:#7c7c9a;--mt2:#a0a0bc;
+  --b:rgba(255,255,255,.07);--b2:rgba(255,255,255,.12);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-height:100vh}
+
+/* ── Animations ── */
+@keyframes fadeUp   {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes fadeIn   {from{opacity:0}to{opacity:1}}
+@keyframes spin     {to{transform:rotate(360deg)}}
+@keyframes pulse    {0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes slideIn  {from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
+@keyframes countUp  {from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+@keyframes shimmer  {0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes ringFill {from{stroke-dashoffset:251.3}to{stroke-dashoffset:var(--target-offset)}}
+@keyframes bounce   {0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes glow     {0%,100%{box-shadow:0 0 10px rgba(124,106,247,.3)}50%{box-shadow:0 0 25px rgba(124,106,247,.7)}}
+
+.fade-up     {animation:fadeUp .5s ease both}
+.fade-up-d1  {animation:fadeUp .5s .1s ease both}
+.fade-up-d2  {animation:fadeUp .5s .2s ease both}
+.fade-up-d3  {animation:fadeUp .5s .3s ease both}
+.fade-up-d4  {animation:fadeUp .5s .4s ease both}
+.slide-in    {animation:slideIn .4s ease both}
+
+/* ── Header ── */
+.navbar-brand .logo-icon{
+  width:42px;height:42px;border-radius:11px;
+  background:linear-gradient(135deg,var(--ac),var(--ac2));
+  display:flex;align-items:center;justify-content:center;
+  animation:glow 3s ease-in-out infinite;
+}
+.nav-badge{
+  padding:4px 12px;background:rgba(124,106,247,.15);
+  border:1px solid rgba(124,106,247,.3);border-radius:20px;
+  font-size:11px;color:var(--ac3);font-weight:500;
+}
+
+/* ── Cards ── */
+.dark-card{
+  background:var(--s);border:1px solid var(--b2);
+  border-radius:14px;padding:1.3rem;
+}
+
+/* ── Input ── */
+.url-input{
+  background:var(--s2)!important;border:1px solid var(--b2)!important;
+  border-radius:10px!important;color:var(--tx)!important;
+  font-size:14px;padding:12px 16px!important;
+  transition:border-color .2s,box-shadow .2s;
+}
+.url-input:focus{
+  border-color:var(--ac)!important;
+  box-shadow:0 0 0 3px rgba(124,106,247,.2)!important;
+  outline:none!important;
+}
+.url-input::placeholder{color:var(--mt)!important}
+
+.analyze-btn{
+  background:var(--ac);border:none;border-radius:10px;
+  padding:12px 22px;font-family:'Syne',sans-serif;
+  font-size:13px;font-weight:700;color:#fff;
+  transition:all .2s;white-space:nowrap;
+}
+.analyze-btn:hover:not(:disabled){
+  background:#6b59e8;transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(124,106,247,.4);
+}
+.analyze-btn:disabled{opacity:.5;cursor:not-allowed}
+.analyze-btn:active{transform:translateY(0)}
+
+/* ── Chips ── */
+.chip{
+  background:var(--s2);border:1px solid var(--b);
+  border-radius:20px;padding:5px 13px;font-size:12px;
+  color:var(--mt2);cursor:pointer;transition:all .15s;
+  display:inline-block;
+}
+.chip:hover{border-color:var(--ac);color:var(--ac3);background:rgba(124,106,247,.08);transform:translateY(-1px)}
+
+/* ── Loading ── */
+.spinner-ring{
+  width:44px;height:44px;border:3px solid var(--b2);
+  border-top-color:var(--ac);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+.loading-step{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 14px;background:var(--s);
+  border:1px solid var(--b);border-radius:10px;
+  font-size:13px;color:var(--mt);transition:all .3s;
+}
+.loading-step.active{color:var(--tx);border-color:var(--b2)}
+.loading-step.done{color:var(--gn);border-color:rgba(34,211,160,.2)}
+.step-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--b2);flex-shrink:0;transition:background .3s;
+}
+.loading-step.active .step-dot{background:var(--ac);animation:pulse 1s ease-in-out infinite}
+.loading-step.done .step-dot{background:var(--gn)}
+
+/* ── Score Ring ── */
+.score-ring-wrap{position:relative;width:90px;height:90px;flex-shrink:0}
+.score-ring-wrap svg{transform:rotate(-90deg);width:90px;height:90px}
+.score-overlay{
+  position:absolute;inset:0;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;
+}
+.score-num{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1}
+.score-sub{font-size:9px;color:var(--mt);margin-top:2px}
+.fg-ring{
+  fill:none;stroke-width:8;stroke-linecap:round;
+  stroke-dasharray:251.3;
+  animation:ringFill 1.4s cubic-bezier(.4,0,.2,1) both;
+}
+
+/* ── Verdict badge ── */
+.verdict-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:12px;font-weight:600;padding:5px 14px;border-radius:20px;
+}
+
+/* ── Metric cards ── */
+.metric-card{
+  background:var(--s);border:1px solid var(--b);
+  border-radius:10px;padding:12px 14px;
+  transition:transform .2s,box-shadow .2s;
+}
+.metric-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.metric-label{font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+.metric-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700}
+
+/* ── Summary ── */
+.summary-box{
+  background:rgba(124,106,247,.07);
+  border:1px solid rgba(124,106,247,.2);
+  border-radius:12px;padding:14px 16px;
+  font-size:13.5px;color:var(--mt2);line-height:1.75;
+}
+
+/* ── Tabs ── */
+.custom-tabs{
+  display:flex;gap:4px;background:var(--s);
+  border:1px solid var(--b);border-radius:12px;padding:4px;
+}
+.custom-tab{
+  flex:1;padding:8px 10px;border-radius:9px;font-size:13px;
+  font-weight:500;color:var(--mt);cursor:pointer;
+  text-align:center;border:none;background:none;
+  font-family:'DM Sans',sans-serif;transition:all .15s;
+}
+.custom-tab.active{
+  background:var(--s3);color:var(--tx);
+  border:1px solid var(--b2);
+}
+.tab-pane-custom{display:none}
+.tab-pane-custom.active{display:block;animation:fadeIn .3s ease}
+
+/* ── Pro/Con items ── */
+.pc-item{
+  display:flex;gap:9px;padding:7px 0;
+  border-bottom:1px solid var(--b);font-size:13px;
+  color:var(--mt2);line-height:1.5;
+  transition:background .15s;
+}
+.pc-item:last-child{border:none;padding-bottom:0}
+.pc-item:hover{color:var(--tx)}
+.pc-dot{
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;flex-shrink:0;margin-top:1px;font-weight:700;
+}
+.pro-dot{background:rgba(34,211,160,.15);color:var(--gn)}
+.con-dot{background:rgba(248,113,113,.15);color:var(--rd)}
+
+/* ── Reviews ── */
+.review-item{
+  padding:11px 0;border-bottom:1px solid var(--b);
+  animation:slideIn .3s ease both;
+}
+.review-item:last-child{border:none}
+.stars{color:var(--am);font-size:12px;letter-spacing:1px}
+.reviewer{font-size:12px;color:var(--mt2);font-weight:500}
+.snt-badge{font-size:10px;padding:2px 9px;border-radius:10px;font-weight:500}
+.snt-pos{background:rgba(34,211,160,.1);color:var(--gn)}
+.snt-neg{background:rgba(248,113,113,.1);color:var(--rd)}
+.snt-neu{background:rgba(165,148,249,.1);color:var(--ac2)}
+.review-src{font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(255,165,0,.1);color:#ffa500}
+.review-text{font-size:13px;color:var(--mt);line-height:1.55}
+
+/* ── Price rows ── */
+.price-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 13px;border-radius:9px;
+  border:1px solid var(--b);margin-bottom:7px;
+  transition:transform .15s,border-color .15s;
+}
+.price-row:hover{transform:translateX(3px)}
+.price-row.best-price-row{border-color:rgba(34,211,160,.3);background:rgba(34,211,160,.05)}
+.price-row.cur-price-row{border-color:rgba(124,106,247,.3);background:rgba(124,106,247,.05)}
+.price-icon{font-size:18px;flex-shrink:0}
+.price-name{flex:1;font-size:13px;font-weight:500}
+.price-amount{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+.best-tag{font-size:10px;padding:2px 9px;border-radius:10px;background:rgba(34,211,160,.15);color:var(--gn);font-weight:600}
+
+/* ── History bars ── */
+.hist-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end}
+.hist-bar{width:100%;border-radius:4px 4px 0 0;transition:height .8s cubic-bezier(.4,0,.2,1)}
+.hist-month{font-size:10px;color:var(--mt)}
+.hist-price{font-size:10px;color:var(--mt2)}
+
+/* ── Tags ── */
+.tag-hi{background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.25);color:var(--ac3);padding:4px 11px;border-radius:20px;font-size:12px;display:inline-block;margin:3px;transition:all .15s}
+.tag-hi:hover{background:rgba(124,106,247,.2);transform:translateY(-1px)}
+.tag-lo{background:var(--s2);border:1px solid var(--b2);color:var(--mt2);padding:4px 11px;border-radius:20px;font-size:12px;display:inline-block;margin:3px}
+
+/* ── Info boxes ── */
+.info-box{border-radius:11px;padding:13px}
+.info-box-g{background:rgba(34,211,160,.05);border:1px solid rgba(34,211,160,.2)}
+.info-box-r{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2)}
+.info-box-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:5px}
+.info-box-val{font-size:12px;color:var(--mt2);line-height:1.5}
+
+/* ── Source badge ── */
+.source-badge{
+  font-size:11px;padding:3px 9px;border-radius:8px;
+  background:rgba(124,106,247,.1);color:var(--ac3);
+  border:1px solid rgba(124,106,247,.2);
+}
+
+/* ── Panel ── */
+.panel-title{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--mt);font-weight:600;margin-bottom:12px}
+
+/* ── Error ── */
+.error-box{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.25);border-radius:12px}
+
+/* ── Skeleton shimmer ── */
+.shimmer{
+  background:linear-gradient(90deg,var(--s2) 25%,var(--s3) 50%,var(--s2) 75%);
+  background-size:200% 100%;animation:shimmer 1.5s infinite;
+  border-radius:6px;
+}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="header">
-    <div class="logo">
+
+<!-- Navbar -->
+<nav class="navbar px-3 px-md-5 py-3" style="border-bottom:1px solid var(--b);background:rgba(10,10,15,.95);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100">
+  <a class="navbar-brand d-flex align-items-center gap-3 text-decoration-none" href="#">
+    <div class="logo-icon">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
         <path d="M10 2L4 6.5v7L10 18l6-4.5v-7L10 2z" fill="white" fill-opacity=".9"/>
         <circle cx="10" cy="10" r="2.5" fill="white" fill-opacity=".5"/>
       </svg>
     </div>
-    <div class="header-text">
-      <h1>AI Product Analyzer</h1>
-      <p>Scrape · Review · Score · Compare · Track</p>
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--tx)">AI Product Analyzer</div>
+      <div style="font-size:11px;color:var(--mt)">Scrape · Review · Score · Compare · Track</div>
     </div>
-    <div class="badge">Groq · Free</div>
+  </a>
+  <div class="d-flex align-items-center gap-2">
+    <span class="nav-badge"><i class="bi bi-lightning-charge-fill me-1"></i>Groq · Free</span>
   </div>
+</nav>
 
-  <div class="card">
-    <div class="lbl">Product URL</div>
-    <div class="input-row">
-      <input type="text" id="u" placeholder="https://www.amazon.com/dp/... or any product URL"
-             onkeydown="if(event.key==='Enter')go()"/>
-      <button class="btn" id="btn" onclick="go()">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-          <path d="M6.5 1.5L11.5 6.5 6.5 11.5M1.5 6.5h10" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Analyze
+<div class="container-lg py-4" style="max-width:900px">
+
+  <!-- Input card -->
+  <div class="dark-card mb-3 fade-up">
+    <div style="font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.8px;font-weight:500;margin-bottom:8px">
+      <i class="bi bi-link-45deg me-1"></i>Product URL
+    </div>
+    <div class="d-flex gap-2">
+      <input type="text" class="form-control url-input" id="urlInput"
+        placeholder="https://www.amazon.com/dp/... or any product URL"
+        onkeydown="if(event.key==='Enter')go()"/>
+      <button class="analyze-btn" id="analyzeBtn" onclick="go()">
+        <i class="bi bi-search me-1"></i>Analyze
       </button>
     </div>
-    <div class="chips">
+    <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
       <span style="font-size:11px;color:var(--mt)">Try:</span>
       <span class="chip" onclick="su('https://www.amazon.com/dp/B08N5WRWNW')">Amazon Echo</span>
       <span class="chip" onclick="su('https://www.amazon.com/dp/B09XS7JWHH')">Sony WH-1000XM5</span>
       <span class="chip" onclick="su('https://www.amazon.com/dp/B09G9HD6PD')">Kindle</span>
       <span class="chip" onclick="su('https://www.amazon.com/dp/B0BDHX9ZWK')">AirPods Pro 2</span>
-      <span class="chip" onclick="su('https://www.amazon.com/dp/B07XJ8C8F7')">Sony WH-1000XM4</span>
+      <span class="chip" onclick="su('https://www.amazon.com/dp/B07XJ8C8F7')">WH-1000XM4</span>
     </div>
   </div>
 
-  <div id="loading" class="hide" style="text-align:center;padding:3rem">
-    <div class="spinner" style="margin:0 auto 12px"></div>
-    <p style="font-size:13px;color:var(--mt2)">Analyzing with Llama 3.3...</p>
+  <!-- Loading -->
+  <div id="loadingDiv" class="d-none text-center py-5">
+    <div class="spinner-ring mx-auto mb-3"></div>
+    <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--mt2)" class="mb-3">Analyzing with Llama 3.3...</div>
+    <div class="d-flex flex-column gap-2 mx-auto" style="max-width:300px" id="loadingSteps">
+      <div class="loading-step" id="ls0"><div class="step-dot"></div><span>Scraping product page…</span></div>
+      <div class="loading-step" id="ls1"><div class="step-dot"></div><span>Searching Reddit reviews…</span></div>
+      <div class="loading-step" id="ls2"><div class="step-dot"></div><span>Analyzing with AI…</span></div>
+      <div class="loading-step" id="ls3"><div class="step-dot"></div><span>Comparing prices…</span></div>
+      <div class="loading-step" id="ls4"><div class="step-dot"></div><span>Generating score…</span></div>
+    </div>
   </div>
 
-  <div class="err" id="err"></div>
+  <!-- Error -->
+  <div id="errorDiv" class="d-none error-box p-4 text-center mb-3">
+    <i class="bi bi-exclamation-triangle fs-3 text-danger mb-2 d-block"></i>
+    <strong class="text-danger">Analysis Failed</strong>
+    <div class="mt-1" id="errorMsg" style="font-size:13px;color:var(--mt2)"></div>
+  </div>
 
-  <div id="res" class="hide fade-in">
-    <div class="score-hero">
-      <div class="score-ring">
-        <svg viewBox="0 0 96 96" id="ring"></svg>
-        <div class="score-overlay">
-          <span class="snum" id="snum"></span>
-          <span class="ssub">/100</span>
+  <!-- Results -->
+  <div id="resultsDiv" class="d-none">
+
+    <!-- Score hero -->
+    <div class="dark-card mb-3 fade-up">
+      <div class="d-flex align-items-center gap-4 flex-wrap">
+        <div class="score-ring-wrap">
+          <svg viewBox="0 0 96 96">
+            <circle cx="48" cy="48" r="40" fill="none" stroke="#22222f" stroke-width="8"/>
+            <circle id="scoreRing" class="fg-ring" cx="48" cy="48" r="40"/>
+          </svg>
+          <div class="score-overlay">
+            <span class="score-num" id="scoreNum"></span>
+            <span class="score-sub">/100</span>
+          </div>
+        </div>
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-1">
+            <h2 id="productName" style="font-family:'Syne',sans-serif;font-size:19px;font-weight:700;margin:0"></h2>
+            <span id="sourceInfo" class="source-badge"></span>
+          </div>
+          <div id="productUrl" style="font-size:10px;color:var(--mt);margin-bottom:9px;word-break:break-all"></div>
+          <span id="verdictBadge" class="verdict-badge"></span>
         </div>
       </div>
-      <div class="score-info">
-        <h2 id="pname"></h2>
-        <div class="purl" id="purl"></div>
-        <span class="vbadge" id="vbadge"></span>
+    </div>
+
+    <!-- Metrics -->
+    <div class="row g-2 mb-3">
+      <div class="col-6 col-md-3 fade-up-d1"><div class="metric-card"><div class="metric-label"><i class="bi bi-star-fill me-1" style="color:var(--am)"></i>Avg Rating</div><div class="metric-val" id="mRating" style="color:var(--am)"></div></div></div>
+      <div class="col-6 col-md-3 fade-up-d2"><div class="metric-card"><div class="metric-label"><i class="bi bi-chat-dots me-1" style="color:var(--ac2)"></i>Reviews</div><div class="metric-val" id="mReviews" style="color:var(--ac2)"></div></div></div>
+      <div class="col-6 col-md-3 fade-up-d3"><div class="metric-card"><div class="metric-label"><i class="bi bi-tag-fill me-1" style="color:var(--gn)"></i>Best Price</div><div class="metric-val" id="mPrice" style="color:var(--gn)"></div></div></div>
+      <div class="col-6 col-md-3 fade-up-d4"><div class="metric-card"><div class="metric-label"><i class="bi bi-graph-up me-1"></i>Value Score</div><div class="metric-val" id="mValue"></div></div></div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-box mb-3 fade-up" id="summaryBox"></div>
+
+    <!-- Ideal / Avoid -->
+    <div class="row g-2 mb-3">
+      <div class="col-md-6 fade-up-d1">
+        <div class="info-box info-box-g">
+          <div class="info-box-label" style="color:var(--gn)"><i class="bi bi-check-circle-fill me-1"></i>Ideal for</div>
+          <div class="info-box-val" id="idealFor"></div>
+        </div>
+      </div>
+      <div class="col-md-6 fade-up-d2">
+        <div class="info-box info-box-r">
+          <div class="info-box-label" style="color:var(--rd)"><i class="bi bi-x-circle-fill me-1"></i>Avoid if</div>
+          <div class="info-box-val" id="avoidIf"></div>
+        </div>
       </div>
     </div>
 
-    <div class="metrics">
-      <div class="mcard"><div class="mlbl">Avg Rating</div><div class="mval" id="mr" style="color:var(--am)"></div></div>
-      <div class="mcard"><div class="mlbl">Reviews</div><div class="mval" id="mv" style="color:var(--ac2)"></div></div>
-      <div class="mcard"><div class="mlbl">Best Price</div><div class="mval" id="mp" style="color:var(--gn)"></div></div>
-      <div class="mcard"><div class="mlbl">Value Score</div><div class="mval" id="ms"></div></div>
+    <!-- Tabs -->
+    <div class="custom-tabs mb-3 fade-up">
+      <button class="custom-tab active" onclick="switchTab(this,'t-overview')"><i class="bi bi-grid me-1"></i>Overview</button>
+      <button class="custom-tab" onclick="switchTab(this,'t-reviews')"><i class="bi bi-chat-square-text me-1"></i>Reviews</button>
+      <button class="custom-tab" onclick="switchTab(this,'t-prices')"><i class="bi bi-currency-dollar me-1"></i>Prices</button>
+      <button class="custom-tab" onclick="switchTab(this,'t-history')"><i class="bi bi-bar-chart me-1"></i>History</button>
     </div>
 
-    <div class="summary" id="sum"></div>
-
-    <div class="ibox">
-      <div class="ib ib-g">
-        <div class="ib-lbl" style="color:var(--gn)">Ideal for</div>
-        <div class="ib-val" id="ideal"></div>
+    <!-- Overview -->
+    <div id="t-overview" class="tab-pane-custom active">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="dark-card h-100">
+            <div class="panel-title"><i class="bi bi-hand-thumbs-up-fill me-1" style="color:var(--gn)"></i>Pros</div>
+            <div id="prosDiv"></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="dark-card h-100">
+            <div class="panel-title"><i class="bi bi-hand-thumbs-down-fill me-1" style="color:var(--rd)"></i>Cons</div>
+            <div id="consDiv"></div>
+          </div>
+        </div>
       </div>
-      <div class="ib ib-r">
-        <div class="ib-lbl" style="color:var(--rd)">Avoid if</div>
-        <div class="ib-val" id="avoid"></div>
+      <div class="dark-card mt-3">
+        <div class="panel-title"><i class="bi bi-tags-fill me-1" style="color:var(--ac2)"></i>Tags</div>
+        <div id="tagsDiv"></div>
       </div>
     </div>
 
-    <div class="tabs">
-      <button class="tab on" onclick="st(this,'t1')">Overview</button>
-      <button class="tab" onclick="st(this,'t2')">Reviews</button>
-      <button class="tab" onclick="st(this,'t3')">Prices</button>
-      <button class="tab" onclick="st(this,'t4')">History</button>
+    <!-- Reviews -->
+    <div id="t-reviews" class="tab-pane-custom">
+      <div class="dark-card">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="panel-title mb-0"><i class="bi bi-chat-dots-fill me-1" style="color:var(--ac2)"></i>Customer Reviews</div>
+          <span id="redditBadge" class="d-none" style="font-size:11px;padding:3px 9px;border-radius:8px;background:rgba(255,69,0,.1);color:#ff4500;border:1px solid rgba(255,69,0,.2)">
+            <i class="bi bi-reddit me-1"></i>Includes Reddit
+          </span>
+        </div>
+        <div id="reviewsDiv"></div>
+      </div>
     </div>
 
-    <div id="t1" class="tp on">
-      <div class="two">
-        <div class="panel"><div class="ptitle">Pros</div><div id="pros"></div></div>
-        <div class="panel"><div class="ptitle">Cons</div><div id="cons"></div></div>
+    <!-- Prices -->
+    <div id="t-prices" class="tab-pane-custom">
+      <div class="dark-card">
+        <div class="panel-title"><i class="bi bi-shop me-1" style="color:var(--gn)"></i>Price Comparison</div>
+        <div id="pricesDiv"></div>
       </div>
-      <div class="panel"><div class="ptitle">Tags</div><div class="tags" id="tags"></div></div>
     </div>
-    <div id="t2" class="tp"><div class="panel" id="revs"></div></div>
-    <div id="t3" class="tp">
-      <div class="panel"><div class="ptitle">Price Comparison</div><div id="prices"></div></div>
+
+    <!-- History -->
+    <div id="t-history" class="tab-pane-custom">
+      <div class="dark-card">
+        <div class="panel-title"><i class="bi bi-clock-history me-1" style="color:var(--am)"></i>Price History — Last 6 Months</div>
+        <div class="d-flex align-items-flex-end gap-1" id="histBars" style="height:100px;align-items:flex-end"></div>
+        <div class="mt-2" id="histMeta" style="font-size:12px;color:var(--mt)"></div>
+      </div>
     </div>
-    <div id="t4" class="tp">
-      <div class="panel">
-        <div class="ptitle">Price History — Last 6 Months</div>
-        <div class="hbars" id="hbars"></div>
-        <div class="hmeta" id="hmeta"></div>
+
+  </div>
+
+  <!-- Empty state -->
+  <div id="emptyDiv" class="text-center py-5 fade-up">
+    <div style="font-size:50px;margin-bottom:16px;opacity:.25"><i class="bi bi-search"></i></div>
+    <h5 style="font-family:'Syne',sans-serif;font-weight:700;color:var(--mt2);margin-bottom:8px">Enter a product URL above</h5>
+    <p style="font-size:13px;color:var(--mt);max-width:340px;margin:0 auto;line-height:1.6">
+      Paste any Amazon, Flipkart, Best Buy or other product link.<br>
+      Even if scraping fails, the AI uses Reddit + its own knowledge to analyze the product.
+    </p>
+    <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
+      <div class="text-center" style="animation:bounce 2s ease-in-out infinite">
+        <div style="font-size:22px;margin-bottom:4px">🔍</div>
+        <div style="font-size:11px;color:var(--mt)">Scrapes pages</div>
+      </div>
+      <div class="text-center" style="animation:bounce 2s .3s ease-in-out infinite">
+        <div style="font-size:22px;margin-bottom:4px">🤖</div>
+        <div style="font-size:11px;color:var(--mt)">AI analysis</div>
+      </div>
+      <div class="text-center" style="animation:bounce 2s .6s ease-in-out infinite">
+        <div style="font-size:22px;margin-bottom:4px">💬</div>
+        <div style="font-size:11px;color:var(--mt)">Reddit reviews</div>
+      </div>
+      <div class="text-center" style="animation:bounce 2s .9s ease-in-out infinite">
+        <div style="font-size:22px;margin-bottom:4px">💰</div>
+        <div style="font-size:11px;color:var(--mt)">Price compare</div>
+      </div>
+      <div class="text-center" style="animation:bounce 2s 1.2s ease-in-out infinite">
+        <div style="font-size:22px;margin-bottom:4px">📊</div>
+        <div style="font-size:11px;color:var(--mt)">Score 1-100</div>
       </div>
     </div>
   </div>
 
-  <div class="empty" id="empty">
-    <div style="font-size:40px;margin-bottom:14px;opacity:.3">◎</div>
-    <h3>Enter a product URL above</h3>
-    <p>Paste any Amazon, Best Buy, Walmart or other product link to get a full AI-powered analysis.</p>
-  </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
-const su = u => { $('u').value = u; };
-const sc = s => s>=80?'#22d3a0':s>=65?'#a594f9':s>=45?'#fbbf24':'#f87171';
-const vd = s => s>=80?['Excellent Buy','rgba(34,211,160,.12)','#22d3a0','rgba(34,211,160,.25)']:
-                 s>=65?['Good Product','rgba(124,106,247,.12)','#a594f9','rgba(124,106,247,.25)']:
-                 s>=45?['Average','rgba(251,191,36,.12)','#fbbf24','rgba(251,191,36,.25)']:
-                       ['Skip It','rgba(248,113,113,.12)','#f87171','rgba(248,113,113,.25)'];
+const su = u => { $('urlInput').value = u; };
 
-function st(el, id) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
-  el.classList.add('on');
-  document.querySelectorAll('.tp').forEach(t => t.classList.remove('on'));
-  $(id).classList.add('on');
+function switchTab(el, id) {
+  document.querySelectorAll('.custom-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-pane-custom').forEach(t => t.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+function scoreColor(s) {
+  return s>=80?'#22d3a0':s>=65?'#a594f9':s>=45?'#fbbf24':'#f87171';
+}
+
+function verdictInfo(s) {
+  if(s>=80) return ['Excellent Buy','rgba(34,211,160,.12)','#22d3a0','rgba(34,211,160,.3)','bi-patch-check-fill'];
+  if(s>=65) return ['Good Product','rgba(124,106,247,.12)','#a594f9','rgba(124,106,247,.3)','bi-hand-thumbs-up-fill'];
+  if(s>=45) return ['Average','rgba(251,191,36,.12)','#fbbf24','rgba(251,191,36,.3)','bi-dash-circle-fill'];
+  return ['Skip It','rgba(248,113,113,.12)','#f87171','rgba(248,113,113,.3)','bi-x-circle-fill'];
+}
+
+let stepTimers = [];
+function startLoadingSteps() {
+  const delays = [0, 1000, 2500, 4000, 5200];
+  stepTimers.forEach(clearTimeout);
+  stepTimers = delays.map((d, i) => setTimeout(() => {
+    if(i > 0) {
+      const prev = $(`ls${i-1}`);
+      if(prev) { prev.classList.remove('active'); prev.classList.add('done'); }
+    }
+    const el = $(`ls${i}`);
+    if(el) el.classList.add('active');
+  }, d));
+}
+
+function resetSteps() {
+  stepTimers.forEach(clearTimeout);
+  for(let i=0;i<5;i++) {
+    const el = $(`ls${i}`);
+    if(el) { el.classList.remove('active','done'); }
+  }
 }
 
 async function go() {
-  const url = $('u').value.trim();
-  if (!url) return;
-  $('btn').disabled = true;
-  $('loading').classList.remove('hide');
-  $('res').classList.add('hide');
-  $('err').classList.remove('on');
-  $('empty').classList.add('hide');
+  const url = $('urlInput').value.trim();
+  if(!url) { $('urlInput').focus(); return; }
+
+  $('analyzeBtn').disabled = true;
+  $('loadingDiv').classList.remove('d-none');
+  $('resultsDiv').classList.add('d-none');
+  $('errorDiv').classList.add('d-none');
+  $('emptyDiv').classList.add('d-none');
+  resetSteps();
+  startLoadingSteps();
 
   try {
-    const r = await fetch('/api/analyze', {
+    const res = await fetch('/api/analyze', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({url, force_refresh: false})
     });
-    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Server error'); }
-    const j = await r.json();
-    render(j.data);
+    if(!res.ok) {
+      const e = await res.json();
+      throw new Error(e.detail || 'Server error '+res.status);
+    }
+    const j = await res.json();
+    renderResults(j.data);
   } catch(e) {
-    $('err').innerHTML = `<div style="font-size:22px;margin-bottom:8px">⚠</div>
-      <strong>Analysis Failed</strong><br>
-      <span style="font-size:12px;opacity:.8">${e.message}</span>`;
-    $('err').classList.add('on');
+    $('errorMsg').textContent = e.message;
+    $('errorDiv').classList.remove('d-none');
   }
-  $('loading').classList.add('hide');
-  $('btn').disabled = false;
+
+  $('loadingDiv').classList.add('d-none');
+  $('analyzeBtn').disabled = false;
 }
 
-function render(d) {
-  const s = d.score||0, col = sc(s), [vl,vbg,vc,vb] = vd(s);
-  const C = 2*Math.PI*40, off = C*(1-s/100);
-  $('ring').innerHTML = `<circle cx="48" cy="48" r="40" fill="none" stroke="#22222f" stroke-width="8"/>
-    <circle cx="48" cy="48" r="40" fill="none" stroke="${col}" stroke-width="8"
-      stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/>`;
-  $('snum').textContent = s; $('snum').style.color = col;
-  $('pname').textContent = d.productName||'Product';
-  $('purl').textContent  = d.url||'';
-  const vb2 = $('vbadge');
-  vb2.textContent = vl;
+function renderResults(d) {
+  const s   = d.score || 0;
+  const col = scoreColor(s);
+  const [vl, vbg, vc, vb, vi] = verdictInfo(s);
+
+  // Score ring animation
+  const circ  = 2 * Math.PI * 40;
+  const offset = circ * (1 - s / 100);
+  const ring   = $('scoreRing');
+  ring.style.stroke = col;
+  ring.style.setProperty('--target-offset', offset);
+  ring.style.strokeDashoffset = offset;
+
+  $('scoreNum').textContent = s;
+  $('scoreNum').style.color = col;
+  $('productName').textContent = d.productName || 'Product';
+  $('productUrl').textContent  = d.url || '';
+
+  // Source badge
+  const src = $('sourceInfo');
+  if(d.redditReviews) {
+    src.innerHTML = '<i class="bi bi-reddit me-1"></i>Reddit enhanced';
+    src.style.cssText = 'font-size:11px;padding:3px 9px;border-radius:8px;background:rgba(255,69,0,.1);color:#ff4500;border:1px solid rgba(255,69,0,.2)';
+  } else {
+    src.innerHTML = '<i class="bi bi-robot me-1"></i>AI analyzed';
+    src.style.cssText = '';
+    src.className = 'source-badge';
+  }
+
+  // Verdict
+  const vb2 = $('verdictBadge');
+  vb2.innerHTML = `<i class="bi ${vi} me-1"></i>${vl}`;
   vb2.style.cssText = `background:${vbg};color:${vc};border:1px solid ${vb}`;
-  $('mr').textContent = (d.avgRating||'--')+' ★';
-  $('mv').textContent = d.reviewCount||'--';
-  $('mp').textContent = d.bestPrice||'--';
-  $('ms').textContent = (d.valueScore||'--')+'%'; $('ms').style.color = col;
-  $('sum').textContent = d.summary||'';
-  $('ideal').textContent = d.idealBuyer||'--';
-  $('avoid').textContent = d.avoidIf||'--';
 
-  $('pros').innerHTML = (d.pros||[]).map(p =>
-    `<div class="pci"><span class="pdot pro">✓</span><span>${p}</span></div>`).join('') ||
-    '<p style="color:var(--mt);font-size:13px">—</p>';
-  $('cons').innerHTML = (d.cons||[]).map(c =>
-    `<div class="pci"><span class="pdot con">✕</span><span>${c}</span></div>`).join('') ||
-    '<p style="color:var(--mt);font-size:13px">—</p>';
-  $('tags').innerHTML = (d.tags||[]).map((t,i) =>
-    `<span class="tag ${i<3?'thi':'tlo'}">${t}</span>`).join('');
+  // Metrics
+  $('mRating').textContent  = (d.avgRating || '--') + ' ★';
+  $('mReviews').textContent = d.reviewCount || '--';
+  $('mPrice').textContent   = d.bestPrice || '--';
+  $('mValue').textContent   = (d.valueScore || '--') + '%';
+  $('mValue').style.color   = col;
 
-  $('revs').innerHTML = '<div class="ptitle">Customer Reviews</div>' +
-    ((d.reviews||[]).map(r => {
-      const st2 = '★'.repeat(r.rating||3)+'☆'.repeat(5-(r.rating||3));
-      const sn2 = r.sentiment==='positive'?'sp':r.sentiment==='negative'?'sn':'su';
-      const sl  = (r.sentiment||'neutral');
-      return `<div class="rev"><div class="rh"><span class="stars">${st2}</span>
-        <span class="rname">${r.author||'User'}</span>
-        <span class="rsnt ${sn2}">${sl.charAt(0).toUpperCase()+sl.slice(1)}</span></div>
-        <p class="rt">${r.text||''}</p></div>`;
-    }).join('') || '<p style="color:var(--mt);text-align:center;padding:16px;font-size:13px">No reviews scraped from this page</p>');
+  $('summaryBox').textContent = d.summary || '';
+  $('idealFor').textContent   = d.idealBuyer || '--';
+  $('avoidIf').textContent    = d.avoidIf || '--';
 
-  const plats = d.platforms||[];
+  // Pros
+  $('prosDiv').innerHTML = (d.pros||[]).map(p =>
+    `<div class="pc-item"><span class="pc-dot pro-dot"><i class="bi bi-check-lg" style="font-size:9px"></i></span><span>${p}</span></div>`
+  ).join('') || '<p style="color:var(--mt);font-size:13px">—</p>';
+
+  // Cons
+  $('consDiv').innerHTML = (d.cons||[]).map(c =>
+    `<div class="pc-item"><span class="pc-dot con-dot"><i class="bi bi-x-lg" style="font-size:9px"></i></span><span>${c}</span></div>`
+  ).join('') || '<p style="color:var(--mt);font-size:13px">—</p>';
+
+  // Tags
+  $('tagsDiv').innerHTML = (d.tags||[]).map((t,i) =>
+    `<span class="${i<3?'tag-hi':'tag-lo'}">${t}</span>`
+  ).join('');
+
+  // Reviews + Reddit badge
+  const hasReddit = (d.reviews||[]).some(r => r.source === 'reddit');
+  $('redditBadge').classList.toggle('d-none', !hasReddit);
+
+  $('reviewsDiv').innerHTML = (d.reviews||[]).map((r,idx) => {
+    const stars = '★'.repeat(r.rating||3) + '☆'.repeat(5-(r.rating||3));
+    const sc2   = r.sentiment==='positive'?'snt-pos':r.sentiment==='negative'?'snt-neg':'snt-neu';
+    const sl    = (r.sentiment||'neutral');
+    const srcTag = r.source==='reddit'
+      ? `<span class="review-src ms-1"><i class="bi bi-reddit me-1"></i>Reddit</span>` : '';
+    return `<div class="review-item" style="animation-delay:${idx*0.05}s">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="stars">${stars}</span>
+        <span class="reviewer">${r.author||'User'}</span>
+        <span class="snt-badge ${sc2}">${sl.charAt(0).toUpperCase()+sl.slice(1)}</span>
+        ${srcTag}
+      </div>
+      <p class="review-text mb-0">${r.text||''}</p>
+    </div>`;
+  }).join('') || '<p style="color:var(--mt);text-align:center;padding:20px;font-size:13px">No reviews found</p>';
+
+  // Prices
+  const plats = d.platforms || [];
   const pnums = plats.map(p => parseFloat((p.price||'0').replace(/[^0-9.]/g,''))||9999);
   const bnum  = Math.min(...pnums);
-  $('prices').innerHTML = plats.map((p,i) => {
+  $('pricesDiv').innerHTML = plats.map((p,i) => {
     const best = pnums[i]===bnum, cur = p.current;
-    return `<div class="pr ${best?'best':cur?'cur':''}">
-      <span class="pico">${p.icon||'🛒'}</span>
-      <span class="pname">${p.name||''}${cur?' <span style="font-size:10px;color:var(--mt)">(current)</span>':''}</span>
-      <span class="pprice" style="color:${best?'var(--gn)':'var(--tx)'}">${p.price||''}</span>
-      ${best?'<span class="btag">Best</span>':''}
+    return `<div class="price-row ${best?'best-price-row':cur?'cur-price-row':''}">
+      <span class="price-icon">${p.icon||'🛒'}</span>
+      <span class="price-name">${p.name||''}${cur?' <span style="font-size:10px;color:var(--mt)">(current)</span>':''}</span>
+      <span class="price-amount" style="color:${best?'var(--gn)':'var(--tx)'}">${p.price||''}</span>
+      ${best?'<span class="best-tag">Best</span>':''}
     </div>`;
   }).join('') || '<p style="color:var(--mt);font-size:13px">—</p>';
 
-  const hist = d.priceHistory||[];
-  if (hist.length) {
+  // History bars
+  const hist = d.priceHistory || [];
+  if(hist.length) {
     const hp = hist.map(h=>h.price), mn=Math.min(...hp), mx=Math.max(...hp), rng=mx-mn||1;
-    $('hbars').innerHTML = hist.map(h => {
-      const ht = 20+55*((h.price-mn)/rng);
-      return `<div class="hbw"><div class="hp">$${h.price}</div>
-        <div class="hb" style="height:${ht.toFixed(0)}px;background:${h.price===mn?'var(--gn)':'var(--s3)'}"></div>
-        <div class="hm">${h.month}</div></div>`;
+    $('histBars').innerHTML = hist.map(h => {
+      const ht = 20 + 65*((h.price-mn)/rng);
+      return `<div class="hist-bar-wrap">
+        <div class="hist-price">$${h.price}</div>
+        <div class="hist-bar" style="height:${ht.toFixed(0)}px;background:${h.price===mn?'var(--gn)':'var(--s3)'}"></div>
+        <div class="hist-month">${h.month}</div>
+      </div>`;
     }).join('');
   }
-  $('hmeta').innerHTML = `Lowest: <b style="color:var(--gn)">${d.lowestPrice||'--'}</b> &middot;
-    Highest: <b style="color:var(--rd)">${d.highestPrice||'--'}</b> &middot;
-    Current: <b>${d.currentPrice||'--'}</b>`;
+  $('histMeta').innerHTML = `<i class="bi bi-arrow-down-circle-fill me-1" style="color:var(--gn)"></i>Lowest: <b style="color:var(--gn)">${d.lowestPrice||'--'}</b>
+    &nbsp;·&nbsp; <i class="bi bi-arrow-up-circle-fill me-1" style="color:var(--rd)"></i>Highest: <b style="color:var(--rd)">${d.highestPrice||'--'}</b>
+    &nbsp;·&nbsp; <i class="bi bi-circle-fill me-1" style="color:var(--tx);font-size:8px"></i>Current: <b>${d.currentPrice||'--'}</b>`;
 
-  $('res').classList.remove('hide');
+  $('resultsDiv').classList.remove('d-none');
+
+  // Reset tabs to overview
+  document.querySelectorAll('.custom-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.custom-tab').classList.add('active');
+  document.querySelectorAll('.tab-pane-custom').forEach(t => t.classList.remove('active'));
+  $('t-overview').classList.add('active');
 }
 </script>
 </body>
