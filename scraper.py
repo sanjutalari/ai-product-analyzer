@@ -164,7 +164,8 @@ class ProductScraper:
         desc  = self._og(s,"og:description") or ""
         rating_t = self._t(s,"[itemprop='ratingValue']")
         rating = self._f(rating_t)
-        return {"name":name.strip()[:200], "price":price.strip(),
+        og_img = self._og(s,'og:image')
+        return {"name":name.strip()[:200], "price":price.strip(), "images":[og_img] if og_img else [],
                 "avg_rating":rating or 0, "category":"", "images":[],
                 "specifications":{}, "raw_reviews":[], "tags":[], "description":desc, "source":"generic"}
 

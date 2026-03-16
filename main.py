@@ -111,6 +111,7 @@ async def analyze(req: AnalyzeRequest, bg: BackgroundTasks):
         "priceHistory":  hi.get("history", []),
         "webSources":    sources,
         "hasWebReviews": len(web_reviews) > 0,
+        "images": pd2.get("images", []),
         "qualityIndicators": lr.get("quality_indicators", {}),
     }
 

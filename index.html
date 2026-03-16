@@ -7,576 +7,498 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <style>
 :root{
-  --ac:#7c6af7;--ac2:#a594f9;--ac3:#c4b5fd;--ac4:rgba(124,106,247,.08);
-  --gn:#22d3a0;--gn2:rgba(34,211,160,.12);
-  --rd:#f87171;--rd2:rgba(248,113,113,.12);
-  --am:#fbbf24;--am2:rgba(251,191,36,.12);
-  --bg:#07070d;--s:#0f0f18;--s2:#16161f;--s3:#1e1e2a;--s4:#252535;
+  --ac:#7c6af7;--ac2:#a594f9;--ac3:#c4b5fd;
+  --gn:#22d3a0;--rd:#f87171;--am:#fbbf24;--or:#fb923c;
+  --bg:#07070d;--s:#0f0f18;--s2:#16161f;--s3:#1e1e2a;--s4:#252535;--s5:#2e2e42;
   --tx:#f0effe;--mt:#6b6b8a;--mt2:#9898b8;--mt3:#bbbbd0;
-  --b:rgba(255,255,255,.05);--b2:rgba(255,255,255,.09);--b3:rgba(255,255,255,.14);
-  --r:14px;--r2:10px;--r3:20px;
+  --b:rgba(255,255,255,.05);--b2:rgba(255,255,255,.09);--b3:rgba(255,255,255,.15);
+  --r:16px;--r2:12px;--r3:22px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
 
-/* ── Noise texture overlay ── */
-body::before{
-  content:'';position:fixed;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events:none;z-index:0;opacity:.4;
+/* ── Animated grid bg ── */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(124,106,247,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(124,106,247,.03) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%);
 }
+.bg-orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(90px);opacity:.1;animation:orbDrift 15s ease-in-out infinite}
+.o1{width:600px;height:600px;background:var(--ac);top:-200px;left:-200px;animation-delay:0s}
+.o2{width:450px;height:450px;background:var(--gn);bottom:-150px;right:-100px;animation-delay:-7s}
+.o3{width:350px;height:350px;background:var(--am);top:40%;left:55%;animation-delay:-3.5s}
+.o4{width:250px;height:250px;background:var(--rd);top:20%;right:10%;animation-delay:-10s}
+@keyframes orbDrift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.06)}66%{transform:translate(-25px,35px) scale(.94)}}
 
-/* ── Animated bg orbs ── */
-.bg-orb{
-  position:fixed;border-radius:50%;pointer-events:none;z-index:0;
-  filter:blur(80px);opacity:.12;
-  animation:orbFloat 12s ease-in-out infinite;
-}
-.orb1{width:500px;height:500px;background:radial-gradient(circle,var(--ac),transparent);top:-200px;left:-200px;animation-delay:0s}
-.orb2{width:400px;height:400px;background:radial-gradient(circle,var(--gn),transparent);bottom:-150px;right:-150px;animation-delay:-6s}
-.orb3{width:300px;height:300px;background:radial-gradient(circle,var(--am),transparent);top:40%;left:60%;animation-delay:-3s}
-@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-20px) scale(1.05)}66%{transform:translate(-20px,30px) scale(.95)}}
-
-/* ── Animations ── */
-@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+/* ── Global animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideRight{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
-@keyframes scaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes slideR{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes slideL{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 15px rgba(124,106,247,.25),0 0 30px rgba(124,106,247,.1)}50%{box-shadow:0 0 30px rgba(124,106,247,.5),0 0 60px rgba(124,106,247,.2)}}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-@keyframes countUp{from{opacity:0;transform:translateY(10px) scale(.9)}to{opacity:1;transform:none}}
-@keyframes ringDraw{from{stroke-dashoffset:251.3}to{stroke-dashoffset:var(--offset)}}
-@keyframes glowPulse{0%,100%{box-shadow:0 0 15px rgba(124,106,247,.2)}50%{box-shadow:0 0 35px rgba(124,106,247,.5)}}
-@keyframes typewriter{from{width:0}to{width:100%}}
-@keyframes barGrow{from{height:0!important}to{height:var(--target-h)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-@keyframes progressFill{from{width:0}to{width:var(--target-w)}}
+@keyframes ripple{0%{transform:scale(0);opacity:.6}100%{transform:scale(2.5);opacity:0}}
+@keyframes typeGlow{0%,100%{text-shadow:0 0 20px rgba(124,106,247,.4)}50%{text-shadow:0 0 40px rgba(124,106,247,.8),0 0 80px rgba(165,148,249,.4)}}
+@keyframes borderFlow{0%{border-color:rgba(124,106,247,.2)}50%{border-color:rgba(124,106,247,.5)}100%{border-color:rgba(124,106,247,.2)}}
+@keyframes countUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes imgReveal{from{opacity:0;transform:scale(.9) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes dotBounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
 
-.fu{animation:fadeUp .55s cubic-bezier(.4,0,.2,1) both}
-.fu1{animation:fadeUp .55s .08s cubic-bezier(.4,0,.2,1) both}
-.fu2{animation:fadeUp .55s .16s cubic-bezier(.4,0,.2,1) both}
-.fu3{animation:fadeUp .55s .24s cubic-bezier(.4,0,.2,1) both}
-.fu4{animation:fadeUp .55s .32s cubic-bezier(.4,0,.2,1) both}
-.sr{animation:slideRight .4s ease both}
+.fu{animation:fadeUp .6s cubic-bezier(.4,0,.2,1) both}
+.fu1{animation:fadeUp .6s .1s cubic-bezier(.4,0,.2,1) both}
+.fu2{animation:fadeUp .6s .2s cubic-bezier(.4,0,.2,1) both}
+.fu3{animation:fadeUp .6s .3s cubic-bezier(.4,0,.2,1) both}
+.fu4{animation:fadeUp .6s .4s cubic-bezier(.4,0,.2,1) both}
+.fu5{animation:fadeUp .6s .5s cubic-bezier(.4,0,.2,1) both}
 
-/* ── Glassmorphism card ── */
-.glass{
-  background:rgba(15,15,24,.8);
-  border:1px solid var(--b2);
-  border-radius:var(--r);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-}
-.glass-sm{
-  background:rgba(22,22,31,.7);
-  border:1px solid var(--b);
-  border-radius:var(--r2);
-}
+/* ── Glassmorphism ── */
+.glass{background:rgba(15,15,24,.85);border:1px solid var(--b2);border-radius:var(--r);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.glass-sm{background:rgba(22,22,31,.8);border:1px solid var(--b);border-radius:var(--r2);backdrop-filter:blur(12px)}
 
 /* ── Navbar ── */
 .topnav{
-  position:sticky;top:0;z-index:200;
-  background:rgba(7,7,13,.85);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--b);
-  padding:14px 24px;
+  position:sticky;top:0;z-index:300;
+  background:rgba(7,7,13,.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--b);padding:14px 28px;
+  transition:all .3s;
 }
-.logo-pill{
-  width:38px;height:38px;border-radius:10px;
-  background:linear-gradient(135deg,var(--ac) 0%,#5b4fd4 100%);
+.topnav.scrolled{background:rgba(7,7,13,.97);border-color:var(--b2)}
+.logo-wrap{
+  width:40px;height:40px;border-radius:11px;
+  background:linear-gradient(135deg,var(--ac),#4a3fc0);
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 20px rgba(124,106,247,.35);
   animation:glowPulse 4s ease-in-out infinite;
+  position:relative;overflow:hidden;
 }
-.brand-name{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;letter-spacing:-.4px}
-.brand-sub{font-size:10px;color:var(--mt);letter-spacing:.4px}
-.top-badge{
+.logo-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);border-radius:inherit}
+.brand{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;letter-spacing:-.5px}
+.brand-sub{font-size:10px;color:var(--mt);letter-spacing:.5px;text-transform:uppercase}
+.live-badge{
+  display:flex;align-items:center;gap:6px;
   font-size:11px;font-weight:500;
-  padding:5px 12px;border-radius:20px;
-  background:rgba(124,106,247,.12);
-  border:1px solid rgba(124,106,247,.25);
-  color:var(--ac3);
-  display:flex;align-items:center;gap:5px;
+  padding:5px 13px;border-radius:20px;
+  background:rgba(34,211,160,.1);border:1px solid rgba(34,211,160,.2);color:var(--gn);
 }
-.status-dot{width:6px;height:6px;border-radius:50%;background:var(--gn);animation:pulse 2s ease-in-out infinite}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--gn);animation:pulse 1.5s ease-in-out infinite}
 
-/* ── Hero search section ── */
-.hero{
-  position:relative;z-index:1;
-  padding:3rem 0 1.5rem;
-  text-align:center;
+/* ── Hero ── */
+.hero{position:relative;z-index:1;padding:3.5rem 0 1rem;text-align:center}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--mt2);
+  background:var(--s2);border:1px solid var(--b2);
+  border-radius:20px;padding:5px 14px;margin-bottom:1.5rem;
+  animation:borderFlow 3s ease-in-out infinite;
 }
 .hero-title{
-  font-family:'Syne',sans-serif;font-size:clamp(28px,5vw,48px);
-  font-weight:800;letter-spacing:-1px;line-height:1.1;
-  background:linear-gradient(135deg,#fff 0%,var(--ac3) 50%,var(--ac2) 100%);
+  font-family:'Syne',sans-serif;
+  font-size:clamp(30px,5.5vw,54px);
+  font-weight:800;letter-spacing:-1.5px;line-height:1.08;
+  background:linear-gradient(135deg,#fff 0%,#d4ccff 40%,var(--ac2) 70%,var(--gn) 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
   background-clip:text;
+  animation:typeGlow 4s ease-in-out infinite;
 }
-.hero-sub{font-size:15px;color:var(--mt2);max-width:480px;margin:.75rem auto 0;line-height:1.6}
+.hero-sub{font-size:15px;color:var(--mt2);max-width:500px;margin:.8rem auto 0;line-height:1.65}
+.hero-stats{display:flex;justify-content:center;gap:2rem;margin-top:1.5rem;flex-wrap:wrap}
+.h-stat{text-align:center}
+.h-stat-num{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--ac2),var(--gn));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.h-stat-lbl{font-size:11px;color:var(--mt);text-transform:uppercase;letter-spacing:.5px}
 
-/* ── Search box ── */
-.search-wrap{
-  position:relative;max-width:700px;margin:2rem auto 0;
+/* ── Search ── */
+.search-outer{position:relative;max-width:720px;margin:2rem auto 0}
+.search-glow{
+  position:absolute;inset:-2px;border-radius:20px;
+  background:linear-gradient(135deg,var(--ac),var(--gn),var(--am));
+  opacity:0;transition:opacity .4s;z-index:-1;filter:blur(8px);
 }
+.search-outer:focus-within .search-glow{opacity:.4}
+.search-inner{
+  display:flex;background:var(--s2);
+  border:1px solid var(--b3);border-radius:18px;
+  padding:6px 6px 6px 18px;
+  box-shadow:0 8px 40px rgba(0,0,0,.4);
+  transition:border-color .3s,box-shadow .3s;
+  position:relative;z-index:1;
+}
+.search-outer:focus-within .search-inner{border-color:rgba(124,106,247,.5);box-shadow:0 8px 40px rgba(0,0,0,.4),0 0 0 4px rgba(124,106,247,.12)}
 .search-box{
-  width:100%;background:var(--s2)!important;
-  border:1px solid var(--b3)!important;border-radius:16px!important;
+  flex:1;background:transparent!important;border:none!important;
   color:var(--tx)!important;font-family:'DM Sans',sans-serif;
-  font-size:15px;padding:18px 140px 18px 54px!important;
-  transition:all .3s;
-  box-shadow:0 8px 32px rgba(0,0,0,.3);
-}
-.search-box:focus{
-  border-color:var(--ac)!important;outline:none!important;
-  box-shadow:0 0 0 3px rgba(124,106,247,.2),0 8px 32px rgba(0,0,0,.3)!important;
+  font-size:15px;padding:10px 0!important;outline:none!important;
+  box-shadow:none!important;
 }
 .search-box::placeholder{color:var(--mt)!important}
-.search-icon{
-  position:absolute;left:18px;top:50%;transform:translateY(-50%);
-  color:var(--mt);font-size:18px;pointer-events:none;transition:color .3s;
-}
-.search-box:focus ~ .search-icon{color:var(--ac2)}
 .search-btn{
-  position:absolute;right:8px;top:8px;bottom:8px;
-  background:linear-gradient(135deg,var(--ac),#5b4fd4);
-  border:none;border-radius:12px;
-  padding:0 22px;color:#fff;
-  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
-  cursor:pointer;transition:all .2s;white-space:nowrap;
-  box-shadow:0 4px 15px rgba(124,106,247,.4);
+  background:linear-gradient(135deg,var(--ac),#5040cc);
+  border:none;border-radius:13px;padding:0 26px;
+  color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+  box-shadow:0 4px 20px rgba(124,106,247,.45);
+  min-height:44px;
 }
-.search-btn:hover:not(:disabled){
-  transform:translateY(-1px);
-  box-shadow:0 8px 25px rgba(124,106,247,.5);
-}
+.search-btn::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,.08);opacity:0;transition:opacity .2s}
+.search-btn:hover::before{opacity:1}
+.search-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,106,247,.55)}
 .search-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.search-btn:active{transform:scale(.98)}
 
 /* ── Chips ── */
-.chips-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:1rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:1.2rem}
 .chip{
-  background:var(--s2);border:1px solid var(--b2);
-  border-radius:20px;padding:6px 14px;font-size:12px;
-  color:var(--mt2);cursor:pointer;transition:all .2s;
-  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,.04);border:1px solid var(--b2);
+  border-radius:20px;padding:6px 15px;font-size:12px;color:var(--mt2);
+  cursor:pointer;transition:all .22s;display:inline-flex;align-items:center;gap:6px;
 }
-.chip:hover{
-  border-color:var(--ac2);color:var(--ac3);
-  background:rgba(124,106,247,.1);transform:translateY(-2px);
-  box-shadow:0 4px 12px rgba(124,106,247,.2);
-}
+.chip:hover{background:rgba(124,106,247,.12);border-color:rgba(124,106,247,.4);color:var(--ac3);transform:translateY(-2px);box-shadow:0 4px 14px rgba(124,106,247,.2)}
 
 /* ── Loading ── */
-.loading-wrap{
-  display:none;max-width:380px;margin:3rem auto;
-  text-align:center;
+.loader{display:none;max-width:400px;margin:3rem auto;text-align:center}
+.loader.on{display:block;animation:fadeUp .4s ease}
+.ldr-orb{
+  width:64px;height:64px;margin:0 auto 1.5rem;border-radius:50%;
+  background:linear-gradient(135deg,var(--ac),var(--gn));
+  display:flex;align-items:center;justify-content:center;
+  animation:glowPulse 2s ease-in-out infinite;
+  position:relative;
 }
-.loading-wrap.show{display:block;animation:fadeUp .4s ease}
-
-.ldr-ring{
-  width:56px;height:56px;margin:0 auto 1.25rem;
-  border:3px solid var(--s3);border-top-color:var(--ac);
-  border-radius:50%;animation:spin .7s linear infinite;
+.ldr-orb::after{
+  content:'';position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid transparent;
+  border-top-color:var(--ac2);border-right-color:var(--gn);
+  animation:spin .8s linear infinite;
 }
-.ldr-title{
-  font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
-  color:var(--mt3);margin-bottom:1.5rem;
-}
-.ldr-steps{display:flex;flex-direction:column;gap:8px}
+.ldr-txt{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--mt3);margin-bottom:1.5rem}
+.ldr-steps{display:flex;flex-direction:column;gap:7px;text-align:left}
 .ldr-step{
-  display:flex;align-items:center;gap:10px;
-  padding:9px 14px;
+  display:flex;align-items:center;gap:10px;padding:9px 14px;
   background:var(--s2);border:1px solid var(--b);border-radius:10px;
-  font-size:13px;color:var(--mt);transition:all .35s;
+  font-size:13px;color:var(--mt);transition:all .3s;
 }
-.ldr-step.active{color:var(--tx);border-color:var(--b3);background:var(--s3)}
+.ldr-step.on{color:var(--tx);border-color:rgba(124,106,247,.3);background:rgba(124,106,247,.06)}
 .ldr-step.done{color:var(--gn);border-color:rgba(34,211,160,.2);background:rgba(34,211,160,.04)}
-.ldr-dot{width:7px;height:7px;border-radius:50%;background:var(--b3);flex-shrink:0;transition:all .35s}
-.ldr-step.active .ldr-dot{background:var(--ac);animation:pulse 1s ease-in-out infinite}
+.ldr-dot{width:7px;height:7px;border-radius:50%;background:var(--b3);flex-shrink:0;transition:all .3s}
+.ldr-step.on .ldr-dot{background:var(--ac);animation:pulse 1s ease-in-out infinite}
 .ldr-step.done .ldr-dot{background:var(--gn)}
-.ldr-step.done .ldr-icon{color:var(--gn)}
-.ldr-icon{font-size:14px;margin-left:auto;transition:all .35s}
+.step-ic{font-size:14px;margin-left:auto;transition:all .3s}
 
 /* ── Error ── */
-.err-wrap{
-  display:none;max-width:500px;margin:2rem auto;
-  background:rgba(248,113,113,.06);
-  border:1px solid rgba(248,113,113,.2);
-  border-radius:var(--r);padding:2rem;text-align:center;
-}
-.err-wrap.show{display:block;animation:scaleIn .3s ease}
+.err{display:none;max-width:500px;margin:2rem auto;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:var(--r);padding:2rem;text-align:center}
+.err.on{display:block;animation:scaleIn .3s ease}
 
-/* ── Results ── */
-.results-wrap{display:none;position:relative;z-index:1}
-.results-wrap.show{display:block}
+/* ── RESULTS ── */
+.results{display:none;position:relative;z-index:1}
+.results.on{display:block}
+
+/* ── Product Images ── */
+.img-gallery{
+  display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;
+  scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:var(--s4) transparent;
+}
+.img-gallery::-webkit-scrollbar{height:4px}
+.img-gallery::-webkit-scrollbar-track{background:transparent}
+.img-gallery::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
+.img-thumb{
+  flex-shrink:0;width:80px;height:80px;border-radius:10px;
+  border:2px solid var(--b);cursor:pointer;transition:all .25s;
+  object-fit:cover;scroll-snap-align:start;
+  animation:imgReveal .4s ease both;
+}
+.img-thumb:hover{border-color:var(--ac2);transform:scale(1.06)}
+.img-thumb.active{border-color:var(--ac);box-shadow:0 0 12px rgba(124,106,247,.4)}
+.img-main-wrap{
+  position:relative;border-radius:var(--r2);overflow:hidden;
+  background:var(--s3);aspect-ratio:1;max-height:220px;
+  display:flex;align-items:center;justify-content:center;
+}
+.img-main{
+  width:100%;height:100%;object-fit:contain;
+  transition:all .4s cubic-bezier(.4,0,.2,1);
+  animation:imgReveal .5s ease both;
+}
+.img-main.switching{opacity:0;transform:scale(.92)}
+.img-placeholder{
+  width:100%;height:220px;border-radius:var(--r2);
+  background:linear-gradient(135deg,var(--s3),var(--s4));
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--b);
+}
 
 /* ── Score hero ── */
 .score-hero{
-  background:linear-gradient(135deg,rgba(124,106,247,.08) 0%,rgba(34,211,160,.04) 100%);
-  border:1px solid rgba(124,106,247,.15);
-  border-radius:var(--r3);padding:2rem;
   position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(124,106,247,.07) 0%,rgba(34,211,160,.03) 100%);
+  border:1px solid rgba(124,106,247,.14);border-radius:var(--r3);padding:1.75rem;
 }
 .score-hero::before{
-  content:'';position:absolute;top:-60px;right:-60px;
-  width:200px;height:200px;border-radius:50%;
-  background:radial-gradient(circle,rgba(124,106,247,.15),transparent 70%);
-  pointer-events:none;
+  content:'';position:absolute;top:-80px;right:-80px;
+  width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,106,247,.12),transparent 70%);
+  pointer-events:none;animation:orbDrift 8s ease-in-out infinite;
 }
-
-.score-ring-svg{transform:rotate(-90deg);overflow:visible}
+.ring-wrap{position:relative;width:100px;height:100px;flex-shrink:0}
+.ring-svg{transform:rotate(-90deg);overflow:visible}
 .ring-bg{fill:none;stroke:var(--s4);stroke-width:9}
 .ring-fg{
   fill:none;stroke-width:9;stroke-linecap:round;
   stroke-dasharray:251.3;stroke-dashoffset:251.3;
-  transition:stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1);
-  filter:drop-shadow(0 0 6px var(--ring-color));
+  transition:stroke-dashoffset 1.8s cubic-bezier(.4,0,.2,1),stroke .3s;
 }
-.score-num{
-  font-family:'Syne',sans-serif;font-size:28px;font-weight:800;
-  line-height:1;animation:countUp .6s .8s ease both;
-}
+.score-num{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;line-height:1;animation:countUp .5s .9s ease both}
 .score-sub{font-size:9px;color:var(--mt);margin-top:2px}
-.product-title{
-  font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
-  letter-spacing:-.4px;line-height:1.2;margin-bottom:6px;
-}
-.product-url{font-size:11px;color:var(--mt);margin-bottom:12px;word-break:break-all}
-.verdict-chip{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:12px;font-weight:700;letter-spacing:.3px;
-  padding:6px 16px;border-radius:20px;
-  border:1px solid;
-}
+.product-title{font-family:'Syne',sans-serif;font-size:clamp(16px,3vw,22px);font-weight:800;letter-spacing:-.4px;line-height:1.2}
+.purl{font-size:11px;color:var(--mt);margin-top:4px;margin-bottom:10px;word-break:break-all;opacity:.8}
+.verdict{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.3px;padding:6px 16px;border-radius:20px;border:1px solid}
 
-/* ── Metric cards ── */
+/* ── Metrics ── */
 .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-@media(max-width:600px){.metric-grid{grid-template-columns:repeat(2,1fr)}}
-.m-card{
-  background:var(--s2);border:1px solid var(--b);
-  border-radius:var(--r2);padding:14px;
-  transition:all .25s;cursor:default;position:relative;overflow:hidden;
+@media(max-width:580px){.metric-grid{grid-template-columns:repeat(2,1fr)}}
+.mc{
+  background:var(--s2);border:1px solid var(--b);border-radius:var(--r2);padding:14px 15px;
+  transition:all .25s;position:relative;overflow:hidden;cursor:default;
 }
-.m-card::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,transparent 60%,rgba(255,255,255,.02));
-  pointer-events:none;
-}
-.m-card:hover{
-  transform:translateY(-3px);
-  border-color:var(--b3);
-  box-shadow:0 8px 24px rgba(0,0,0,.3);
-}
-.m-lbl{font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;display:flex;align-items:center;gap:4px}
-.m-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;animation:countUp .5s ease both}
-.m-bar{height:3px;background:var(--s4);border-radius:2px;margin-top:8px;overflow:hidden}
-.m-bar-fill{height:100%;border-radius:2px;width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.mc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--mc-color,var(--ac)),transparent);opacity:0;transition:opacity .3s}
+.mc:hover{transform:translateY(-3px);border-color:var(--b3);box-shadow:0 10px 28px rgba(0,0,0,.3)}
+.mc:hover::before{opacity:1}
+.mc-lbl{font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px;display:flex;align-items:center;gap:4px}
+.mc-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;animation:countUp .5s ease both}
+.mc-bar{height:3px;background:var(--s4);border-radius:2px;margin-top:9px;overflow:hidden}
+.mc-fill{height:100%;border-radius:2px;width:0;transition:width 1.4s cubic-bezier(.4,0,.2,1)}
 
 /* ── Summary ── */
-.summary-card{
-  background:linear-gradient(135deg,rgba(124,106,247,.07),rgba(124,106,247,.03));
-  border:1px solid rgba(124,106,247,.18);
-  border-radius:var(--r);padding:1.4rem 1.6rem;
-  font-size:14px;color:var(--mt3);line-height:1.8;
-  position:relative;
+.sum-card{
+  background:linear-gradient(135deg,rgba(124,106,247,.07),rgba(124,106,247,.02));
+  border:1px solid rgba(124,106,247,.16);border-radius:var(--r);padding:1.5rem;
+  position:relative;overflow:hidden;
 }
-.summary-card::before{
-  content:'\275D';
-  font-size:40px;color:rgba(124,106,247,.15);
-  position:absolute;top:-4px;left:12px;
-  font-family:Georgia,serif;line-height:1;
-}
+.sum-card::after{content:'\201C';font-size:80px;color:rgba(124,106,247,.08);position:absolute;top:-10px;left:8px;font-family:Georgia,serif;line-height:1;pointer-events:none}
 
 /* ── Quality bars ── */
-.q-bar-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px}
-.q-row{display:flex;flex-direction:column;gap:5px}
-.q-label{display:flex;justify-content:space-between;font-size:12px;color:var(--mt2)}
-.q-track{height:6px;background:var(--s4);border-radius:3px;overflow:hidden}
-.q-fill{
-  height:100%;border-radius:3px;
-  background:linear-gradient(90deg,var(--ac),var(--ac2));
-  width:0;transition:width 1.4s cubic-bezier(.4,0,.2,1);
-}
+.q-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px}
+.q-row{display:flex;flex-direction:column;gap:6px}
+.q-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--mt2)}
+.q-track{height:7px;background:var(--s4);border-radius:4px;overflow:hidden;position:relative}
+.q-fill{height:100%;border-radius:4px;width:0;transition:width 1.5s cubic-bezier(.4,0,.2,1);position:relative}
+.q-fill::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2));animation:shimmer 2s infinite;background-size:200% 100%}
 
 /* ── Tabs ── */
-.tab-strip{
-  display:flex;gap:4px;
-  background:var(--s2);border:1px solid var(--b);
-  border-radius:14px;padding:5px;
-}
-.t-btn{
-  flex:1;padding:9px 10px;border-radius:10px;
-  font-size:13px;font-weight:500;color:var(--mt);
+.tab-bar{display:flex;gap:4px;background:var(--s2);border:1px solid var(--b);border-radius:16px;padding:5px}
+.tb{
+  flex:1;padding:9px 8px;border-radius:12px;font-size:13px;font-weight:500;color:var(--mt);
   cursor:pointer;text-align:center;border:none;background:none;
-  font-family:'DM Sans',sans-serif;transition:all .2s;
+  font-family:'DM Sans',sans-serif;transition:all .22s;
   display:flex;align-items:center;justify-content:center;gap:5px;
 }
-.t-btn.on{
-  background:var(--s4);color:var(--tx);
-  border:1px solid var(--b3);
-  box-shadow:0 2px 8px rgba(0,0,0,.2);
-}
-.t-pane{display:none}
-.t-pane.on{display:block;animation:fadeIn .3s ease}
+.tb.on{background:var(--s4);color:var(--tx);border:1px solid var(--b3);box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.tp{display:none}.tp.on{display:block;animation:fadeIn .3s ease}
 
-/* ── Pro/Con ── */
-.pc-item{
-  display:flex;gap:10px;padding:9px 0;
-  border-bottom:1px solid var(--b);font-size:13.5px;
-  color:var(--mt2);line-height:1.5;transition:color .2s;
-}
-.pc-item:last-child{border:none;padding-bottom:0}
-.pc-item:hover{color:var(--tx)}
-.pc-dot{
-  width:20px;height:20px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:700;margin-top:1px;
-}
+/* ── Pros/Cons ── */
+.pci{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--b);font-size:13.5px;color:var(--mt2);line-height:1.5;transition:all .2s}
+.pci:last-child{border:none;padding-bottom:0}
+.pci:hover{color:var(--tx);padding-left:4px}
+.pdot{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-top:1px}
 .pro{background:rgba(34,211,160,.12);color:var(--gn)}
 .con{background:rgba(248,113,113,.12);color:var(--rd)}
 
 /* ── Reviews ── */
-.rev-item{
-  padding:13px 0;border-bottom:1px solid var(--b);
-}
-.rev-item:last-child{border:none}
-.stars-row{color:var(--am);font-size:12px;letter-spacing:1.5px}
-.rev-author{font-size:12px;color:var(--mt2);font-weight:500}
-.snt{font-size:10px;padding:2px 9px;border-radius:8px;font-weight:600}
-.snt-p{background:rgba(34,211,160,.1);color:var(--gn)}
-.snt-n{background:rgba(248,113,113,.1);color:var(--rd)}
-.snt-u{background:rgba(165,148,249,.1);color:var(--ac2)}
-.src-chip{
-  font-size:10px;padding:2px 8px;border-radius:7px;
-  background:var(--s3);color:var(--mt2);border:1px solid var(--b);
-}
-.rev-text{font-size:13px;color:var(--mt);line-height:1.55;margin-top:5px}
+.rev{padding:13px 0;border-bottom:1px solid var(--b)}
+.rev:last-child{border:none}
+.stars{color:var(--am);font-size:11px;letter-spacing:2px}
+.rauth{font-size:12px;color:var(--mt2);font-weight:500}
+.rsnt{font-size:10px;padding:2px 9px;border-radius:8px;font-weight:600}
+.rsp{background:rgba(34,211,160,.1);color:var(--gn)}
+.rsn{background:rgba(248,113,113,.1);color:var(--rd)}
+.rsu{background:rgba(165,148,249,.1);color:var(--ac2)}
+.rsrc{font-size:10px;padding:2px 8px;border-radius:7px;background:var(--s3);color:var(--mt2);border:1px solid var(--b)}
+.rtxt{font-size:13px;color:var(--mt);line-height:1.55;margin-top:6px}
 
-/* ── Price rows ── */
-.price-row{
-  display:flex;align-items:center;gap:12px;
-  padding:11px 14px;border-radius:10px;
-  border:1px solid var(--b);margin-bottom:8px;
-  transition:all .2s;background:var(--s2);
+/* ── Prices ── */
+.pr{
+  display:flex;align-items:center;gap:12px;padding:12px 15px;
+  border-radius:12px;border:1px solid var(--b);margin-bottom:8px;
+  transition:all .22s;background:var(--s2);position:relative;overflow:hidden;
 }
-.price-row:hover{transform:translateX(4px);border-color:var(--b3)}
-.price-row.p-best{border-color:rgba(34,211,160,.3);background:rgba(34,211,160,.04)}
-.price-row.p-cur{border-color:rgba(124,106,247,.25);background:rgba(124,106,247,.04)}
-.p-ico{font-size:20px;flex-shrink:0}
-.p-name{flex:1;font-size:13px;font-weight:500}
-.p-amt{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
-.p-best-tag{
-  font-size:10px;padding:3px 10px;border-radius:8px;
-  background:rgba(34,211,160,.15);color:var(--gn);font-weight:600;
-}
-.save-badge{font-size:10px;color:var(--am);font-weight:600}
+.pr::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:background .2s;border-radius:2px 0 0 2px}
+.pr:hover{transform:translateX(5px);border-color:var(--b3)}
+.pr.pb{border-color:rgba(34,211,160,.3);background:rgba(34,211,160,.04)}.pr.pb::before{background:var(--gn)}
+.pr.pc{border-color:rgba(124,106,247,.25);background:rgba(124,106,247,.04)}.pr.pc::before{background:var(--ac2)}
+.pico{font-size:20px;flex-shrink:0}
+.pn{flex:1;font-size:13px;font-weight:500}
+.pamt{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
+.ptag{font-size:10px;padding:3px 10px;border-radius:8px;font-weight:600;background:rgba(34,211,160,.15);color:var(--gn)}
 
-/* ── History chart ── */
-.hist-chart{display:flex;align-items:flex-end;gap:6px;height:110px;padding-top:10px}
-.h-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
-.h-bar{
-  width:100%;border-radius:5px 5px 0 0;
-  height:0;transition:height 1s cubic-bezier(.4,0,.2,1);
-}
-.h-bar.lowest{background:linear-gradient(180deg,var(--gn),rgba(34,211,160,.5))}
-.h-bar.high{background:var(--s4)}
-.h-bar.cur{background:linear-gradient(180deg,var(--ac2),rgba(165,148,249,.5))}
-.h-price{font-size:10px;color:var(--mt2)}
-.h-month{font-size:10px;color:var(--mt)}
+/* ── Chart ── */
+.chart-wrap{position:relative;height:200px}
 
 /* ── Info boxes ── */
-.ib{border-radius:12px;padding:14px 16px}
-.ib-g{background:rgba(34,211,160,.05);border:1px solid rgba(34,211,160,.18)}
-.ib-r{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.18)}
+.ib{border-radius:13px;padding:14px 16px}
+.ib-g{background:rgba(34,211,160,.05);border:1px solid rgba(34,211,160,.15)}
+.ib-r{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.15)}
 .ib-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:5px}
 .ib-val{font-size:13px;color:var(--mt2);line-height:1.55}
 
 /* ── Tags ── */
-.tag{
-  display:inline-block;margin:3px;padding:5px 13px;
-  border-radius:20px;font-size:12px;transition:all .15s;cursor:default;
-}
-.tag-hi{background:rgba(124,106,247,.12);border:1px solid rgba(124,106,247,.22);color:var(--ac3)}
-.tag-hi:hover{background:rgba(124,106,247,.2);transform:translateY(-1px)}
-.tag-lo{background:var(--s3);border:1px solid var(--b2);color:var(--mt2)}
+.tag{display:inline-block;margin:3px;padding:5px 13px;border-radius:20px;font-size:12px;transition:all .18s;cursor:default}
+.thi{background:rgba(124,106,247,.12);border:1px solid rgba(124,106,247,.22);color:var(--ac3)}
+.thi:hover{background:rgba(124,106,247,.22);transform:translateY(-2px)}
+.tlo{background:var(--s3);border:1px solid var(--b2);color:var(--mt2)}
 
-/* ── Sources sidebar ── */
-.sources-wrap{
-  background:var(--s2);border:1px solid var(--b);
-  border-radius:var(--r2);padding:14px;
-  display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+/* ── Comparison mode ── */
+.compare-panel{display:none;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:1.25rem;margin-top:1rem}
+.compare-panel.on{display:block;animation:fadeUp .3s ease}
+.comp-slot{
+  background:var(--s3);border:2px dashed var(--b2);border-radius:var(--r2);
+  padding:1rem;text-align:center;cursor:pointer;transition:all .2s;
+  font-size:13px;color:var(--mt);
 }
-.src-pill{
-  font-size:11px;padding:4px 10px;border-radius:8px;
-  background:var(--s3);border:1px solid var(--b2);color:var(--mt2);
-  display:flex;align-items:center;gap:4px;
-}
-.src-pill.reddit{background:rgba(255,69,0,.08);border-color:rgba(255,69,0,.2);color:#ff6534}
-.src-pill.expert{background:rgba(34,211,160,.08);border-color:rgba(34,211,160,.2);color:var(--gn)}
+.comp-slot:hover{border-color:var(--ac2);color:var(--ac3)}
+.comp-slot.filled{border-style:solid;border-color:var(--b3);cursor:default;text-align:left}
 
-/* ── Section headers ── */
-.sec-header{
-  display:flex;align-items:center;gap:8px;
-  font-size:11px;font-weight:600;text-transform:uppercase;
-  letter-spacing:.8px;color:var(--mt);margin-bottom:14px;
+/* ── Share / Copy ── */
+.action-btn{
+  background:var(--s2);border:1px solid var(--b2);border-radius:9px;
+  padding:7px 14px;font-size:12px;color:var(--mt2);cursor:pointer;
+  transition:all .18s;display:inline-flex;align-items:center;gap=5px;gap:5px;
 }
-.sec-header::after{
-  content:'';flex:1;height:1px;background:var(--b);
-}
+.action-btn:hover{border-color:var(--b3);color:var(--tx);transform:translateY(-1px)}
 
-/* ── Compare toggle ── */
-.compare-btn{
-  background:var(--s2);border:1px solid var(--b2);
-  border-radius:8px;padding:6px 14px;
-  font-size:12px;color:var(--mt2);cursor:pointer;
-  transition:all .15s;
-}
-.compare-btn:hover{border-color:var(--ac2);color:var(--ac3)}
-
-/* ── Empty state ── */
-.empty-wrap{padding:4rem 1rem;text-align:center;position:relative;z-index:1}
-.empty-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--mt3);margin-bottom:8px}
-.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;max-width:600px;margin:2rem auto 0}
-.feat-card{
-  background:var(--s2);border:1px solid var(--b);border-radius:12px;
-  padding:16px 12px;text-align:center;transition:all .25s;
-}
-.feat-card:hover{
-  transform:translateY(-4px);border-color:var(--b3);
-  box-shadow:0 8px 24px rgba(0,0,0,.25);
-}
-.feat-icon{font-size:26px;margin-bottom:8px;display:block;animation:float 3s ease-in-out infinite}
-.feat-label{font-size:12px;color:var(--mt2);font-weight:500}
-.feat-desc{font-size:11px;color:var(--mt);margin-top:3px}
+/* ── Sec header ── */
+.sh{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--mt);margin-bottom:14px}
+.sh::after{content:'';flex:1;height:1px;background:var(--b)}
 
 /* ── Toast ── */
-.toast-wrap{
-  position:fixed;bottom:24px;right:24px;z-index:999;
-  display:flex;flex-direction:column;gap:8px;
-}
+.toasts{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px}
 .toast-item{
   background:var(--s3);border:1px solid var(--b3);border-radius:12px;
-  padding:12px 16px;font-size:13px;color:var(--tx);
-  box-shadow:0 8px 32px rgba(0,0,0,.4);
-  display:flex;align-items:center;gap:8px;
-  animation:slideRight .3s ease both;min-width:220px;max-width:320px;
+  padding:11px 16px;font-size:13px;color:var(--tx);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:220px;max-width:300px;
+  display:flex;align-items:center;gap:9px;
+  animation:slideL .3s ease both;
 }
 
+/* ── Empty ── */
+.empty{padding:4rem 1rem;text-align:center;position:relative;z-index:1}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;max-width:600px;margin:2rem auto}
+.feat{background:var(--s2);border:1px solid var(--b);border-radius:14px;padding:16px 12px;text-align:center;transition:all .25s;cursor:default}
+.feat:hover{transform:translateY(-5px);border-color:var(--b3);box-shadow:0 10px 28px rgba(0,0,0,.25)}
+.feat-ico{font-size:26px;display:block;margin-bottom:8px;animation:float 3s ease-in-out infinite}
+.feat-lbl{font-size:12px;color:var(--mt2);font-weight:500}
+.feat-desc{font-size:11px;color:var(--mt);margin-top:3px}
+
 /* ── Scrollbar ── */
-::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--s4);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:var(--ac)}
 
-/* ── Responsive ── */
-@media(max-width:600px){
+@media(max-width:576px){
+  .hero{padding:2rem 0 .5rem}
   .score-hero{padding:1.25rem}
-  .product-title{font-size:17px}
-  .search-box{font-size:13px!important;padding:15px 120px 15px 44px!important}
-  .search-btn{padding:0 14px;font-size:12px}
-  .hero-title{font-size:26px}
-  .q-bar-wrap{grid-template-columns:1fr}
+  .product-title{font-size:16px}
+  .q-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 
-<!-- BG orbs -->
-<div class="bg-orb orb1"></div>
-<div class="bg-orb orb2"></div>
-<div class="bg-orb orb3"></div>
-
-<!-- Toast container -->
-<div class="toast-wrap" id="toastWrap"></div>
+<div class="bg-orb o1"></div>
+<div class="bg-orb o2"></div>
+<div class="bg-orb o3"></div>
+<div class="bg-orb o4"></div>
+<div class="toasts" id="toasts"></div>
 
 <!-- Navbar -->
-<nav class="topnav d-flex align-items-center justify-content-between gap-3">
+<nav class="topnav d-flex align-items-center justify-content-between" id="nav">
   <div class="d-flex align-items-center gap-3">
-    <div class="logo-pill">
+    <div class="logo-wrap">
       <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
         <path d="M10 2L4 6.5v7L10 18l6-4.5v-7L10 2z" fill="white" fill-opacity=".92"/>
         <circle cx="10" cy="10" r="2.5" fill="white" fill-opacity=".55"/>
       </svg>
     </div>
     <div>
-      <div class="brand-name">AI Product Analyzer</div>
-      <div class="brand-sub">SCRAPE · REVIEW · SCORE · COMPARE</div>
+      <div class="brand">AI Product Analyzer</div>
+      <div class="brand-sub">Scrape · Search · Score · Compare</div>
     </div>
   </div>
   <div class="d-flex align-items-center gap-2">
-    <div class="top-badge">
-      <div class="status-dot"></div>
-      <span>Groq · Free</span>
-    </div>
+    <div class="live-badge"><div class="live-dot"></div>Live</div>
   </div>
 </nav>
 
-<div class="container-lg px-3 px-md-4" style="max-width:920px;position:relative;z-index:1">
+<div class="container-lg px-3 px-md-4" style="max-width:940px;position:relative;z-index:1">
 
   <!-- Hero -->
   <div class="hero fu">
+    <div class="hero-badge"><i class="bi bi-stars"></i>Powered by Llama 3.3 · Groq · Free</div>
     <h1 class="hero-title">Analyze Any Product<br>with AI Intelligence</h1>
-    <p class="hero-sub">Paste any product URL — we scrape the web, search Reddit &amp; expert sites, and give you a complete AI-powered verdict.</p>
-
-    <div class="search-wrap">
-      <input type="text" class="form-control search-box" id="urlInput"
-        placeholder="Paste product URL from Amazon, Flipkart, any site..."
-        onkeydown="if(event.key==='Enter')go()"/>
-      <i class="bi bi-link-45deg search-icon" id="searchIcon"></i>
-      <button class="search-btn" id="analyzeBtn" onclick="go()">
-        <i class="bi bi-search me-1"></i>Analyze
-      </button>
+    <p class="hero-sub">Paste any URL — we scrape the page, search the web for reviews, and give you a deep AI-powered analysis in seconds.</p>
+    <div class="hero-stats">
+      <div class="h-stat"><div class="h-stat-num">10+</div><div class="h-stat-lbl">Review sources</div></div>
+      <div class="h-stat"><div class="h-stat-num">1–100</div><div class="h-stat-lbl">Smart score</div></div>
+      <div class="h-stat"><div class="h-stat-num">5</div><div class="h-stat-lbl">Price platforms</div></div>
+      <div class="h-stat"><div class="h-stat-num">100%</div><div class="h-stat-lbl">Free forever</div></div>
     </div>
 
-    <div class="chips-row mt-3">
-      <span class="chip" onclick="su('https://www.amazon.com/dp/B08N5WRWNW')"><i class="bi bi-dot" style="color:var(--gn)"></i>Echo Dot</span>
-      <span class="chip" onclick="su('https://www.amazon.com/dp/B09XS7JWHH')"><i class="bi bi-dot" style="color:var(--am)"></i>Sony XM5</span>
-      <span class="chip" onclick="su('https://www.amazon.com/dp/B09G9HD6PD')"><i class="bi bi-dot" style="color:var(--ac2)"></i>Kindle</span>
-      <span class="chip" onclick="su('https://www.amazon.com/dp/B0BDHX9ZWK')"><i class="bi bi-dot" style="color:var(--rd)"></i>AirPods Pro 2</span>
-      <span class="chip" onclick="su('https://www.amazon.com/dp/B07XJ8C8F7')"><i class="bi bi-dot" style="color:var(--gn)"></i>Sony XM4</span>
+    <div class="search-outer">
+      <div class="search-glow"></div>
+      <div class="search-inner">
+        <i class="bi bi-link-45deg" style="color:var(--mt);font-size:18px;flex-shrink:0;align-self:center;margin-right:6px"></i>
+        <input type="text" class="search-box form-control" id="urlInput" placeholder="Paste product URL from Amazon, Flipkart, Best Buy..." onkeydown="if(event.key==='Enter')go()"/>
+        <button class="search-btn" id="analyzeBtn" onclick="go()"><i class="bi bi-search me-1"></i>Analyze</button>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip" onclick="su('https://www.amazon.com/dp/B08N5WRWNW')"><i class="bi bi-circle-fill" style="color:var(--gn);font-size:7px"></i>Echo Dot</span>
+      <span class="chip" onclick="su('https://www.amazon.com/dp/B09XS7JWHH')"><i class="bi bi-circle-fill" style="color:var(--am);font-size:7px"></i>Sony XM5</span>
+      <span class="chip" onclick="su('https://www.amazon.com/dp/B09G9HD6PD')"><i class="bi bi-circle-fill" style="color:var(--ac2);font-size:7px"></i>Kindle</span>
+      <span class="chip" onclick="su('https://www.amazon.com/dp/B0BDHX9ZWK')"><i class="bi bi-circle-fill" style="color:var(--rd);font-size:7px"></i>AirPods Pro 2</span>
+      <span class="chip" onclick="su('https://www.amazon.com/dp/B07XJ8C8F7')"><i class="bi bi-circle-fill" style="color:var(--or);font-size:7px"></i>Sony XM4</span>
     </div>
   </div>
 
-  <!-- Loading -->
-  <div class="loading-wrap" id="loadingWrap">
-    <div class="ldr-ring"></div>
-    <div class="ldr-title" id="ldrTitle">Initializing analysis...</div>
-    <div class="ldr-steps" id="ldrSteps">
-      <div class="ldr-step" id="ls0"><div class="ldr-dot"></div><span>Scraping product page</span><i class="ldr-icon bi bi-hourglass-split"></i></div>
-      <div class="ldr-step" id="ls1"><div class="ldr-dot"></div><span>Searching web &amp; Reddit for reviews</span><i class="ldr-icon bi bi-globe"></i></div>
-      <div class="ldr-step" id="ls2"><div class="ldr-dot"></div><span>AI analyzing with Llama 3.3</span><i class="ldr-icon bi bi-cpu"></i></div>
-      <div class="ldr-step" id="ls3"><div class="ldr-dot"></div><span>Comparing prices across platforms</span><i class="ldr-icon bi bi-shop"></i></div>
-      <div class="ldr-step" id="ls4"><div class="ldr-dot"></div><span>Generating final score</span><i class="ldr-icon bi bi-bar-chart-fill"></i></div>
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    <div class="ldr-orb"><i class="bi bi-cpu-fill" style="font-size:22px;color:white"></i></div>
+    <div class="ldr-txt" id="ldrTxt">Initializing...</div>
+    <div class="ldr-steps">
+      <div class="ldr-step" id="ls0"><div class="ldr-dot"></div><span>Scraping product page</span><i class="step-ic bi bi-browser-chrome"></i></div>
+      <div class="ldr-step" id="ls1"><div class="ldr-dot"></div><span>Fetching product images</span><i class="step-ic bi bi-images"></i></div>
+      <div class="ldr-step" id="ls2"><div class="ldr-dot"></div><span>Searching web &amp; Reddit reviews</span><i class="step-ic bi bi-globe2"></i></div>
+      <div class="ldr-step" id="ls3"><div class="ldr-dot"></div><span>Llama 3.3 deep analysis</span><i class="step-ic bi bi-robot"></i></div>
+      <div class="ldr-step" id="ls4"><div class="ldr-dot"></div><span>Comparing prices &amp; generating score</span><i class="step-ic bi bi-bar-chart-fill"></i></div>
     </div>
   </div>
 
   <!-- Error -->
-  <div class="err-wrap" id="errWrap">
-    <i class="bi bi-exclamation-circle" style="font-size:2.5rem;color:var(--rd);margin-bottom:12px;display:block"></i>
+  <div class="err" id="errBox">
+    <i class="bi bi-exclamation-circle" style="font-size:2.5rem;color:var(--rd);display:block;margin-bottom:12px"></i>
     <strong style="color:var(--rd);font-size:15px">Analysis Failed</strong>
-    <p id="errMsg" style="font-size:13px;color:var(--mt2);margin:8px 0 0;line-height:1.6"></p>
-    <button class="compare-btn mt-3" onclick="document.getElementById('urlInput').focus()">
-      <i class="bi bi-arrow-left me-1"></i>Try again
-    </button>
+    <p id="errMsg" style="font-size:13px;color:var(--mt2);margin:8px 0 16px;line-height:1.6"></p>
+    <button class="action-btn" onclick="$('urlInput').focus()"><i class="bi bi-arrow-left me-1"></i>Try again</button>
   </div>
 
   <!-- Results -->
-  <div id="resultsWrap" class="results-wrap pb-5">
+  <div id="results" class="results pb-5">
 
     <!-- Score hero -->
     <div class="score-hero mb-3 fu">
-      <div class="row align-items-center g-3">
-        <div class="col-auto">
-          <div style="position:relative;width:96px;height:96px">
-            <svg class="score-ring-svg" viewBox="0 0 96 96" width="96" height="96">
-              <circle class="ring-bg" cx="48" cy="48" r="40"/>
-              <circle class="ring-fg" id="ringFg" cx="48" cy="48" r="40"/>
+      <div class="row align-items-start g-3">
+        <!-- Left: ring + meta -->
+        <div class="col-auto d-flex flex-column align-items-center gap-3">
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 100 100" width="100" height="100">
+              <circle class="ring-bg" cx="50" cy="50" r="40"/>
+              <circle class="ring-fg" id="ringFg" cx="50" cy="50" r="40"/>
             </svg>
             <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
               <span class="score-num" id="scoreNum">--</span>
@@ -584,56 +506,70 @@ body::before{
             </div>
           </div>
         </div>
+        <!-- Center: name + verdict -->
         <div class="col">
           <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap mb-1">
-            <h2 class="product-title" id="productName">Product Name</h2>
-            <span id="srcBadge" style="font-size:11px;padding:4px 10px;border-radius:8px;background:rgba(34,211,160,.08);color:var(--gn);border:1px solid rgba(34,211,160,.15)"></span>
+            <h2 class="product-title" id="productName"></h2>
+            <span id="srcBadge" style="font-size:11px;padding:4px 11px;border-radius:8px;background:rgba(34,211,160,.08);color:var(--gn);border:1px solid rgba(34,211,160,.15);flex-shrink:0"></span>
           </div>
-          <div class="product-url" id="productUrl"></div>
-          <div class="d-flex align-items-center flex-wrap gap-2">
-            <span class="verdict-chip" id="verdictChip"></span>
-            <span id="reviewsBadge" style="font-size:12px;color:var(--mt)"></span>
+          <div class="purl" id="productUrl"></div>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="verdict" id="verdictEl"></span>
+            <span id="revCountBadge" style="font-size:12px;color:var(--mt)"></span>
           </div>
+          <!-- Action buttons -->
+          <div class="d-flex gap-2 mt-3 flex-wrap">
+            <button class="action-btn" onclick="copyLink()"><i class="bi bi-share me-1"></i>Share</button>
+            <button class="action-btn" onclick="copyJSON()"><i class="bi bi-code me-1"></i>Export JSON</button>
+            <button class="action-btn" onclick="reanalyze()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+          </div>
+        </div>
+        <!-- Right: product image -->
+        <div class="col-md-3 col-12" id="imgPanel">
+          <div class="img-main-wrap" id="imgMain">
+            <div class="img-placeholder"><i class="bi bi-image" style="font-size:2rem;color:var(--mt)"></i></div>
+          </div>
+          <div class="img-gallery mt-2" id="imgGallery"></div>
         </div>
       </div>
     </div>
 
     <!-- Metrics -->
     <div class="metric-grid mb-3">
-      <div class="m-card fu1">
-        <div class="m-lbl"><i class="bi bi-star-fill" style="color:var(--am)"></i>Avg Rating</div>
-        <div class="m-val" id="mRating" style="color:var(--am)">--</div>
-        <div class="m-bar"><div class="m-bar-fill" id="mRatingBar" style="background:var(--am)"></div></div>
+      <div class="mc fu1" style="--mc-color:var(--am)">
+        <div class="mc-lbl"><i class="bi bi-star-fill" style="color:var(--am)"></i>Avg Rating</div>
+        <div class="mc-val" id="mR" style="color:var(--am)">--</div>
+        <div class="mc-bar"><div class="mc-fill" id="mRb" style="background:var(--am)"></div></div>
       </div>
-      <div class="m-card fu2">
-        <div class="m-lbl"><i class="bi bi-chat-dots-fill" style="color:var(--ac2)"></i>Reviews</div>
-        <div class="m-val" id="mReviews" style="color:var(--ac2)">--</div>
-        <div class="m-bar"><div class="m-bar-fill" id="mReviewsBar" style="background:var(--ac2)"></div></div>
+      <div class="mc fu2" style="--mc-color:var(--ac2)">
+        <div class="mc-lbl"><i class="bi bi-chat-dots-fill" style="color:var(--ac2)"></i>Reviews</div>
+        <div class="mc-val" id="mV" style="color:var(--ac2)">--</div>
+        <div class="mc-bar"><div class="mc-fill" id="mVb" style="background:var(--ac2)"></div></div>
       </div>
-      <div class="m-card fu3">
-        <div class="m-lbl"><i class="bi bi-tag-fill" style="color:var(--gn)"></i>Best Price</div>
-        <div class="m-val" id="mPrice" style="color:var(--gn)">--</div>
-        <div class="m-bar"><div class="m-bar-fill" id="mPriceBar" style="background:var(--gn)"></div></div>
+      <div class="mc fu3" style="--mc-color:var(--gn)">
+        <div class="mc-lbl"><i class="bi bi-tag-fill" style="color:var(--gn)"></i>Best Price</div>
+        <div class="mc-val" id="mP" style="color:var(--gn)">--</div>
+        <div class="mc-bar"><div class="mc-fill" id="mPb" style="background:var(--gn)"></div></div>
       </div>
-      <div class="m-card fu4">
-        <div class="m-lbl"><i class="bi bi-lightning-fill" style="color:var(--ac3)"></i>Value Score</div>
-        <div class="m-val" id="mValue">--</div>
-        <div class="m-bar"><div class="m-bar-fill" id="mValueBar"></div></div>
+      <div class="mc fu4" style="--mc-color:var(--or)">
+        <div class="mc-lbl"><i class="bi bi-lightning-fill" style="color:var(--or)"></i>Value Score</div>
+        <div class="mc-val" id="mS">--</div>
+        <div class="mc-bar"><div class="mc-fill" id="mSb"></div></div>
       </div>
     </div>
 
-    <!-- Summary + quality -->
+    <!-- Summary + Quality -->
     <div class="row g-3 mb-3">
-      <div class="col-md-7">
-        <div class="summary-card h-100 fu1">
-          <div class="sec-header" style="margin-bottom:22px"><i class="bi bi-quote me-1"></i>AI Verdict</div>
-          <p id="summaryText" style="margin:0;font-size:14px;line-height:1.8;color:var(--mt3)"></p>
+      <div class="col-md-7 fu1">
+        <div class="sum-card h-100">
+          <div class="sh"><i class="bi bi-quote"></i>AI Verdict</div>
+          <p id="sumTxt" style="font-size:14px;color:var(--mt3);line-height:1.8;margin:0"></p>
         </div>
       </div>
-      <div class="col-md-5">
-        <div class="glass p-4 h-100 fu2">
-          <div class="sec-header"><i class="bi bi-speedometer2 me-1"></i>Quality Breakdown</div>
-          <div class="q-bar-wrap" id="qualityBars"></div>
+      <div class="col-md-5 fu2">
+        <div class="glass p-4 h-100">
+          <div class="sh"><i class="bi bi-speedometer2"></i>Quality Breakdown</div>
+          <div class="q-grid" id="qBars"></div>
         </div>
       </div>
     </div>
@@ -643,110 +579,80 @@ body::before{
       <div class="col-md-6 fu1">
         <div class="ib ib-g">
           <div class="ib-lbl" style="color:var(--gn)"><i class="bi bi-check-circle-fill"></i>Ideal for</div>
-          <div class="ib-val" id="idealFor">—</div>
+          <div class="ib-val" id="idealFor"></div>
         </div>
       </div>
       <div class="col-md-6 fu2">
         <div class="ib ib-r">
           <div class="ib-lbl" style="color:var(--rd)"><i class="bi bi-x-circle-fill"></i>Avoid if</div>
-          <div class="ib-val" id="avoidIf">—</div>
+          <div class="ib-val" id="avoidIf"></div>
         </div>
       </div>
     </div>
 
     <!-- Tabs -->
-    <div class="tab-strip mb-3 fu">
-      <button class="t-btn on" onclick="swTab(this,'t-ov')"><i class="bi bi-grid-1x2"></i><span>Overview</span></button>
-      <button class="t-btn" onclick="swTab(this,'t-rv')"><i class="bi bi-chat-quote"></i><span>Reviews</span></button>
-      <button class="t-btn" onclick="swTab(this,'t-pr')"><i class="bi bi-currency-dollar"></i><span>Prices</span></button>
-      <button class="t-btn" onclick="swTab(this,'t-hi')"><i class="bi bi-bar-chart-line"></i><span>History</span></button>
+    <div class="tab-bar mb-3 fu">
+      <button class="tb on" onclick="swTab(this,'t-ov')"><i class="bi bi-grid-1x2-fill"></i><span>Overview</span></button>
+      <button class="tb" onclick="swTab(this,'t-rv')"><i class="bi bi-chat-quote-fill"></i><span>Reviews</span></button>
+      <button class="tb" onclick="swTab(this,'t-pr')"><i class="bi bi-currency-dollar"></i><span>Prices</span></button>
+      <button class="tb" onclick="swTab(this,'t-hi')"><i class="bi bi-graph-up-arrow"></i><span>History</span></button>
     </div>
 
-    <!-- Overview tab -->
-    <div id="t-ov" class="t-pane on">
+    <!-- Overview -->
+    <div id="t-ov" class="tp on">
       <div class="row g-3">
-        <div class="col-md-6">
-          <div class="glass p-4">
-            <div class="sec-header"><i class="bi bi-hand-thumbs-up-fill" style="color:var(--gn)"></i>Pros</div>
-            <div id="prosDiv"></div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="glass p-4">
-            <div class="sec-header"><i class="bi bi-hand-thumbs-down-fill" style="color:var(--rd)"></i>Cons</div>
-            <div id="consDiv"></div>
-          </div>
-        </div>
+        <div class="col-md-6"><div class="glass p-4"><div class="sh"><i class="bi bi-hand-thumbs-up-fill" style="color:var(--gn)"></i>Pros</div><div id="prosD"></div></div></div>
+        <div class="col-md-6"><div class="glass p-4"><div class="sh"><i class="bi bi-hand-thumbs-down-fill" style="color:var(--rd)"></i>Cons</div><div id="consD"></div></div></div>
       </div>
-      <div class="glass p-4 mt-3">
-        <div class="sec-header"><i class="bi bi-tags-fill" style="color:var(--ac2)"></i>Tags</div>
-        <div id="tagsDiv"></div>
-      </div>
+      <div class="glass p-4 mt-3"><div class="sh"><i class="bi bi-tags-fill" style="color:var(--ac2)"></i>Tags</div><div id="tagsD"></div></div>
     </div>
 
-    <!-- Reviews tab -->
-    <div id="t-rv" class="t-pane">
-      <div class="glass p-4 mb-3">
+    <!-- Reviews -->
+    <div id="t-rv" class="tp">
+      <div class="glass p-4">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-          <div class="sec-header mb-0" style="flex:1"><i class="bi bi-chat-dots-fill" style="color:var(--ac2)"></i>Reviews</div>
-          <div id="sourcePills" class="d-flex flex-wrap gap-1"></div>
+          <div class="sh mb-0" style="flex:1"><i class="bi bi-chat-dots-fill" style="color:var(--ac2)"></i>Reviews</div>
+          <div id="srcPills" class="d-flex flex-wrap gap-1"></div>
         </div>
-        <div id="reviewsDiv"></div>
+        <div id="revsD"></div>
       </div>
     </div>
 
-    <!-- Prices tab -->
-    <div id="t-pr" class="t-pane">
+    <!-- Prices -->
+    <div id="t-pr" class="tp">
       <div class="glass p-4">
-        <div class="sec-header"><i class="bi bi-shop" style="color:var(--gn)"></i>Price Comparison</div>
-        <div id="pricesDiv"></div>
-        <div id="savingsDiv" class="mt-2" style="font-size:12px;color:var(--am)"></div>
+        <div class="sh"><i class="bi bi-shop-window" style="color:var(--gn)"></i>Price Comparison</div>
+        <div id="pricesD"></div>
+        <div id="savingsD" class="mt-2" style="font-size:12px;color:var(--am)"></div>
       </div>
     </div>
 
-    <!-- History tab -->
-    <div id="t-hi" class="t-pane">
+    <!-- History — Chart.js line graph -->
+    <div id="t-hi" class="tp">
       <div class="glass p-4">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-          <div class="sec-header mb-0"><i class="bi bi-clock-history" style="color:var(--am)"></i>Price History</div>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+          <div class="sh mb-0"><i class="bi bi-graph-up-arrow" style="color:var(--am)"></i>Price History</div>
           <span style="font-size:11px;color:var(--mt)">Last 6 months</span>
         </div>
-        <div class="hist-chart" id="histChart"></div>
-        <div class="mt-3 d-flex flex-wrap gap-3" id="histMeta" style="font-size:12px;color:var(--mt)"></div>
+        <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+        <div class="mt-3 d-flex flex-wrap gap-4" id="histMeta" style="font-size:12px;color:var(--mt)"></div>
       </div>
     </div>
 
   </div>
 
   <!-- Empty state -->
-  <div id="emptyState" class="empty-wrap fu">
-    <div style="font-size:3.5rem;margin-bottom:1rem;opacity:.15"><i class="bi bi-search"></i></div>
-    <h3 class="empty-title">Drop any product URL above</h3>
-    <p style="font-size:13px;color:var(--mt);max-width:380px;margin:0 auto;line-height:1.7">
-      Works with Amazon, Flipkart, Best Buy, Walmart — or any product page.<br>
-      Even blocked sites? The AI uses web search + its own knowledge.
-    </p>
-    <div class="feature-grid">
-      <div class="feat-card" style="animation-delay:.1s">
-        <span class="feat-icon" style="animation-delay:0s">🔍</span>
-        <div class="feat-label">Smart Scraping</div>
-        <div class="feat-desc">Extracts real data</div>
-      </div>
-      <div class="feat-card" style="animation-delay:.15s">
-        <span class="feat-icon" style="animation-delay:.5s">🤖</span>
-        <div class="feat-label">Llama 3.3 AI</div>
-        <div class="feat-desc">Deep analysis</div>
-      </div>
-      <div class="feat-card" style="animation-delay:.2s">
-        <span class="feat-icon" style="animation-delay:1s">🌐</span>
-        <div class="feat-label">Web Reviews</div>
-        <div class="feat-desc">Reddit + expert sites</div>
-      </div>
-      <div class="feat-card" style="animation-delay:.25s">
-        <span class="feat-icon" style="animation-delay:1.5s">💰</span>
-        <div class="feat-label">Price Compare</div>
-        <div class="feat-desc">5 platforms</div>
-      </div>
+  <div id="emptyState" class="empty fu">
+    <div style="font-size:4rem;margin-bottom:1rem;opacity:.1;filter:blur(1px)"><i class="bi bi-search"></i></div>
+    <h3 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--mt3);margin-bottom:8px">Drop any product URL above</h3>
+    <p style="font-size:13px;color:var(--mt);max-width:380px;margin:0 auto;line-height:1.7">Works with Amazon, Flipkart, Best Buy, Walmart — or any product page. Even if scraping fails, the AI uses web search + its own knowledge.</p>
+    <div class="feat-grid">
+      <div class="feat"><span class="feat-ico" style="animation-delay:.0s">🔍</span><div class="feat-lbl">Smart Scraping</div><div class="feat-desc">Real page data</div></div>
+      <div class="feat"><span class="feat-ico" style="animation-delay:.4s">🖼️</span><div class="feat-lbl">Product Images</div><div class="feat-desc">Auto fetched</div></div>
+      <div class="feat"><span class="feat-ico" style="animation-delay:.8s">🌐</span><div class="feat-lbl">Web Reviews</div><div class="feat-desc">Reddit + experts</div></div>
+      <div class="feat"><span class="feat-ico" style="animation-delay:1.2s">🤖</span><div class="feat-lbl">Llama 3.3 AI</div><div class="feat-desc">Deep analysis</div></div>
+      <div class="feat"><span class="feat-ico" style="animation-delay:1.6s">💰</span><div class="feat-lbl">Price Compare</div><div class="feat-desc">5 platforms</div></div>
+      <div class="feat"><span class="feat-ico" style="animation-delay:2.0s">📈</span><div class="feat-lbl">Price Graph</div><div class="feat-desc">6-month chart</div></div>
     </div>
   </div>
 
@@ -755,79 +661,173 @@ body::before{
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
-const su = url => { $('urlInput').value = url; toast('URL loaded — click Analyze!','bi-link-45deg','var(--ac3)'); };
+const su = url => { $('urlInput').value = url; toast('URL loaded!','bi-link-45deg','var(--ac3)'); };
 
-// ── Toast notifications ─────────────────────────────────────────────────────
+let currentData = null;
+let priceChartInst = null;
+
+// ── Navbar scroll effect ──
+window.addEventListener('scroll', () => {
+  $('nav').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// ── Toast ──────────────────────────────────────────────────────────────────
 function toast(msg, icon='bi-info-circle', color='var(--ac3)') {
-  const t = document.createElement('div');
-  t.className = 'toast-item';
-  t.innerHTML = `<i class="bi ${icon}" style="color:${color};font-size:16px;flex-shrink:0"></i><span>${msg}</span>`;
-  $('toastWrap').appendChild(t);
-  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(20px)'; t.style.transition='all .3s'; setTimeout(()=>t.remove(),300); }, 3000);
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.innerHTML = `<i class="bi ${icon}" style="color:${color};font-size:16px;flex-shrink:0"></i><span>${msg}</span>`;
+  $('toasts').appendChild(el);
+  setTimeout(() => { el.style.cssText='opacity:0;transform:translateX(16px);transition:all .3s'; setTimeout(()=>el.remove(),350); }, 3000);
 }
 
-// ── Tab switching ─────────────────────────────────────────────────────────
+// ── Tab switch ─────────────────────────────────────────────────────────────
 function swTab(el, id) {
-  document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');
-  document.querySelectorAll('.t-pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('on'));
   $(id).classList.add('on');
-  if(id==='t-hi') animateHistBars();
+  if(id==='t-hi' && currentData) renderChart(currentData.priceHistory||[]);
 }
 
-// ── Loading steps ──────────────────────────────────────────────────────────
-let stepTimers=[], currentStep=-1;
-const stepMsgs=['Scraping product page...','Searching the web for reviews...','AI is thinking...','Comparing prices...','Generating your score...'];
-function startSteps(){
-  stepTimers.forEach(clearTimeout); currentStep=-1;
-  for(let i=0;i<5;i++){const el=$(`ls${i}`);if(el)el.classList.remove('active','done');}
-  const delays=[0,1200,2800,4400,5800];
-  stepTimers=delays.map((d,i)=>setTimeout(()=>{
-    if(i>0){const p=$(`ls${i-1}`);if(p){p.classList.remove('active');p.classList.add('done');p.querySelector('.ldr-icon').className='ldr-icon bi bi-check-circle-fill';}}
-    const el=$(`ls${i}`);if(el)el.classList.add('active');
-    $('ldrTitle').textContent=stepMsgs[i];
-    currentStep=i;
-  },d));
-}
-function stopSteps(){stepTimers.forEach(clearTimeout);}
-
-// ── Color helpers ──────────────────────────────────────────────────────────
-function scoreCol(s){return s>=80?'#22d3a0':s>=65?'#a594f9':s>=45?'#fbbf24':'#f87171';}
-function verdictData(s){
+// ── Helpers ────────────────────────────────────────────────────────────────
+const scCol = s => s>=80?'#22d3a0':s>=65?'#a594f9':s>=45?'#fbbf24':'#f87171';
+function vData(s) {
   if(s>=80) return ['Excellent Buy','rgba(34,211,160,.12)','#22d3a0','rgba(34,211,160,.3)','bi-patch-check-fill'];
   if(s>=65) return ['Good Product','rgba(124,106,247,.12)','#a594f9','rgba(124,106,247,.3)','bi-hand-thumbs-up-fill'];
   if(s>=45) return ['Average','rgba(251,191,36,.1)','#fbbf24','rgba(251,191,36,.3)','bi-dash-circle-fill'];
   return ['Skip It','rgba(248,113,113,.1)','#f87171','rgba(248,113,113,.3)','bi-x-circle-fill'];
 }
 
-// ── Animate history bars ────────────────────────────────────────────────────
-let histData=[];
-function animateHistBars(){
-  if(!histData.length) return;
-  const hp=histData.map(h=>h.price), mn=Math.min(...hp), mx=Math.max(...hp), rng=mx-mn||1;
-  document.querySelectorAll('.h-bar').forEach((bar,i)=>{
-    const targetH = 20+75*((hp[i]-mn)/rng);
-    bar.style.transition='none'; bar.style.height='0px';
-    setTimeout(()=>{
-      bar.style.transition=`height ${0.8+i*0.08}s cubic-bezier(.4,0,.2,1)`;
-      bar.style.height=targetH+'px';
-    },50+i*60);
+// ── Loading steps ──────────────────────────────────────────────────────────
+let stepTm=[];
+const stepLabels=['Scraping product page...','Fetching product images...','Searching web for reviews...','Llama 3.3 analyzing...','Generating score & prices...'];
+function startSteps(){
+  stepTm.forEach(clearTimeout); stepTm=[];
+  for(let i=0;i<5;i++){const e=$(`ls${i}`);if(e)e.classList.remove('on','done');}
+  [0,1100,2600,4000,5400].forEach((d,i)=>stepTm.push(setTimeout(()=>{
+    if(i>0){const p=$(`ls${i-1}`);if(p){p.classList.remove('on');p.classList.add('done');const ic=p.querySelector('.step-ic');if(ic)ic.className='step-ic bi bi-check-circle-fill';}}
+    const e=$(`ls${i}`);if(e)e.classList.add('on');
+    $('ldrTxt').textContent=stepLabels[i];
+  },d)));
+}
+function stopSteps(){stepTm.forEach(clearTimeout);}
+
+// ── Images ────────────────────────────────────────────────────────────────
+function renderImages(images) {
+  if(!images||!images.length){
+    $('imgMain').innerHTML='<div class="img-placeholder"><i class="bi bi-image" style="font-size:2rem;color:var(--mt)"></i></div>';
+    $('imgGallery').innerHTML='';
+    return;
+  }
+  const valid = images.filter(u=>u&&u.startsWith('http'));
+  if(!valid.length){$('imgMain').innerHTML='<div class="img-placeholder"><i class="bi bi-image" style="font-size:2rem;color:var(--mt)"></i></div>';return;}
+
+  setMainImg(valid[0]);
+  $('imgGallery').innerHTML = valid.slice(0,6).map((u,i)=>
+    `<img src="${u}" class="img-thumb ${i===0?'active':''}" onclick="switchImg(this,'${u}')"
+     onerror="this.style.display='none'" style="animation-delay:${i*.07}s">`
+  ).join('');
+}
+
+function setMainImg(url) {
+  const wrap = $('imgMain');
+  wrap.innerHTML=`<img src="${url}" class="img-main" onerror="this.parentElement.innerHTML='<div class=img-placeholder><i class=\\'bi bi-image\\' style=\\'font-size:2rem;color:var(--mt)\\'></i></div>'" alt="Product">`;
+}
+
+function switchImg(thumb, url) {
+  document.querySelectorAll('.img-thumb').forEach(t=>t.classList.remove('active'));
+  thumb.classList.add('active');
+  const img = $('imgMain').querySelector('img');
+  if(img){img.classList.add('switching');setTimeout(()=>{img.src=url;img.classList.remove('switching');},200);}
+  else setMainImg(url);
+}
+
+// ── Chart.js price history ─────────────────────────────────────────────────
+function renderChart(history) {
+  if(!history||!history.length) return;
+  const ctx = $('priceChart').getContext('2d');
+  if(priceChartInst){priceChartInst.destroy();priceChartInst=null;}
+  const prices = history.map(h=>h.price);
+  const labels = history.map(h=>h.month);
+  const mn = Math.min(...prices), mx = Math.max(...prices);
+
+  priceChartInst = new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Price ($)',
+        data:prices,
+        borderColor:'#7c6af7',
+        backgroundColor:(ctx2)=>{
+          const g=ctx2.chart.ctx.createLinearGradient(0,0,0,180);
+          g.addColorStop(0,'rgba(124,106,247,.35)');
+          g.addColorStop(1,'rgba(124,106,247,.01)');
+          return g;
+        },
+        borderWidth:2.5,
+        pointBackgroundColor: prices.map(p=>p===mn?'#22d3a0':p===mx?'#f87171':'#a594f9'),
+        pointBorderColor:'#07070d',
+        pointBorderWidth:2,
+        pointRadius:5,
+        pointHoverRadius:8,
+        tension:.45,
+        fill:true,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      animation:{duration:1200,easing:'easeInOutQuart'},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'rgba(22,22,31,.95)',
+          borderColor:'rgba(124,106,247,.4)',borderWidth:1,
+          titleColor:'#f0effe',bodyColor:'#9898b8',
+          padding:12,cornerRadius:10,
+          callbacks:{label:ctx3=>`  $${ctx3.parsed.y.toFixed(2)}`}
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b6b8a',font:{size:11}}},
+        y:{
+          grid:{color:'rgba(255,255,255,.04)'},
+          ticks:{color:'#6b6b8a',font:{size:11},callback:v=>`$${v}`},
+          min:Math.max(0, mn-Math.ceil((mx-mn)*.3)),
+          max:mx+Math.ceil((mx-mn)*.3)||mx*1.1,
+        }
+      }
+    }
   });
 }
 
-// ── Main analyze ────────────────────────────────────────────────────────────
+// ── Action buttons ─────────────────────────────────────────────────────────
+function copyLink(){
+  navigator.clipboard.writeText(window.location.href).then(()=>toast('Link copied!','bi-clipboard-check','var(--gn)'));
+}
+function copyJSON(){
+  if(currentData){
+    navigator.clipboard.writeText(JSON.stringify(currentData,null,2)).then(()=>toast('JSON copied!','bi-code-square','var(--ac3)'));
+  }
+}
+function reanalyze(){
+  const url=$('urlInput').value.trim();
+  if(url) fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,force_refresh:true})}).then(r=>r.json()).then(j=>{render(j.data);toast('Refreshed!','bi-arrow-clockwise','var(--gn)');});
+}
+
+// ── Main go ────────────────────────────────────────────────────────────────
 async function go(){
   const url=$('urlInput').value.trim();
-  if(!url){$('urlInput').focus();toast('Please enter a product URL','bi-exclamation-circle','var(--rd)');return;}
+  if(!url){$('urlInput').focus();toast('Please enter a URL','bi-exclamation-circle','var(--rd)');return;}
   $('analyzeBtn').disabled=true;
-  $('loadingWrap').classList.add('show');
-  $('resultsWrap').classList.remove('show');
-  $('errWrap').classList.remove('show');
+  $('loader').classList.add('on');
+  $('results').classList.remove('on');
+  $('errBox').classList.remove('on');
   $('emptyState').style.display='none';
   startSteps();
   try{
     const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,force_refresh:false})});
-    if(!res.ok){const e=await res.json();throw new Error(e.detail||'Server error '+res.status);}
+    if(!res.ok){const e=await res.json();throw new Error(e.detail||'Error '+res.status);}
     const j=await res.json();
     stopSteps();
     render(j.data);
@@ -835,116 +835,97 @@ async function go(){
   }catch(e){
     stopSteps();
     $('errMsg').textContent=e.message;
-    $('errWrap').classList.add('show');
-    toast('Analysis failed','bi-exclamation-triangle-fill','var(--rd)');
+    $('errBox').classList.add('on');
+    toast('Failed: '+e.message.slice(0,40),'bi-x-circle-fill','var(--rd)');
   }
-  $('loadingWrap').classList.remove('show');
+  $('loader').classList.remove('on');
   $('analyzeBtn').disabled=false;
 }
 
-// ── Render results ─────────────────────────────────────────────────────────
+// ── Render ─────────────────────────────────────────────────────────────────
 function render(d){
-  const s=d.score||0, col=scoreCol(s);
-  const [vl,vbg,vc,vb,vi]=verdictData(s);
-  const circ=2*Math.PI*40, off=circ*(1-s/100);
+  currentData=d;
+  const s=d.score||0, col=scCol(s);
+  const [vl,vbg,vc,vb,vi]=vData(s);
 
   // Score ring
   const ring=$('ringFg');
+  const circ=2*Math.PI*40;
   ring.style.stroke=col;
-  ring.style.setProperty('--ring-color',col);
-  ring.style.filter=`drop-shadow(0 0 8px ${col})`;
-  setTimeout(()=>{ ring.style.strokeDashoffset=off; },100);
-  $('scoreNum').textContent=s;
-  $('scoreNum').style.color=col;
+  ring.style.filter=`drop-shadow(0 0 10px ${col})`;
+  setTimeout(()=>{ ring.style.strokeDashoffset=circ*(1-s/100); },120);
+  $('scoreNum').textContent=s; $('scoreNum').style.color=col;
 
-  // Names + badges
+  // Product info
   $('productName').textContent=d.productName||'Product';
   $('productUrl').textContent=d.url||'';
-  const wsrc=d.webSources||{};
-  const srcCount=Object.values(wsrc).reduce((a,b)=>a+b,0);
-  const srcEl=$('srcBadge');
-  if(srcCount>0){srcEl.innerHTML=`<i class="bi bi-globe me-1"></i>${srcCount} sources`;srcEl.style.display='inline';}
-  else{srcEl.innerHTML='<i class="bi bi-robot me-1"></i>AI knowledge';srcEl.style.display='inline';}
 
-  $('reviewsBadge').textContent=d.reviewCount ? `${d.reviewCount} reviews` : '';
+  const ws=d.webSources||{};
+  const wc=Object.values(ws).reduce((a,b)=>a+b,0);
+  const sb=$('srcBadge');
+  sb.innerHTML=wc>0?`<i class="bi bi-globe me-1"></i>${wc} sources`:'<i class="bi bi-robot me-1"></i>AI knowledge';
+  if(wc>0){sb.style.cssText='font-size:11px;padding:4px 11px;border-radius:8px;background:rgba(34,211,160,.08);color:var(--gn);border:1px solid rgba(34,211,160,.15)';}
+  else{sb.style.cssText='font-size:11px;padding:4px 11px;border-radius:8px;background:rgba(124,106,247,.08);color:var(--ac3);border:1px solid rgba(124,106,247,.15)';}
 
-  // Verdict
-  const vc2=$('verdictChip');
-  vc2.innerHTML=`<i class="bi ${vi} me-1"></i>${vl}`;
-  vc2.style.cssText=`background:${vbg};color:${vc};border-color:${vb}`;
+  const ve=$('verdictEl');
+  ve.innerHTML=`<i class="bi ${vi} me-1"></i>${vl}`;
+  ve.style.cssText=`background:${vbg};color:${vc};border-color:${vb}`;
+  $('revCountBadge').textContent=d.reviewCount?`${d.reviewCount} reviews`:'';
 
-  // Metrics + bars
-  const rating=parseFloat(d.avgRating)||0;
-  $('mRating').textContent=(rating||'--')+(rating?' ★':'');
-  $('mRatingBar').style.width=(rating/5*100)+'%';
-  $('mReviews').textContent=d.reviewCount||'--';
-  $('mReviewsBar').style.width='75%';
-  $('mPrice').textContent=d.bestPrice||'--';
-  $('mPriceBar').style.width='60%';
+  // Images
+  renderImages(d.images||[]);
+
+  // Metrics
+  const rt=parseFloat(d.avgRating)||0;
+  $('mR').textContent=(rt||'--')+(rt?' ★':'');
+  $('mRb').style.width=(rt/5*100)+'%';
+  $('mV').textContent=d.reviewCount||'--';
+  $('mVb').style.width='70%';
+  $('mP').textContent=d.bestPrice||'--';
+  $('mPb').style.width='65%';
   const vs=d.valueScore||0;
-  $('mValue').textContent=(vs||'--')+'%';
-  $('mValue').style.color=col;
-  $('mValueBar').style.cssText=`width:${vs}%;background:${col}`;
+  $('mS').textContent=(vs||'--')+'%'; $('mS').style.color=col;
+  $('mSb').style.cssText=`width:${vs}%;background:${col}`;
 
   // Summary
-  $('summaryText').textContent=d.summary||'';
+  $('sumTxt').textContent=d.summary||'';
 
   // Quality bars
   const qi=d.qualityIndicators||{build_quality:70,performance:75,value_for_money:65,reliability:70};
-  const qLabels=[['Build Quality',qi.build_quality||70],['Performance',qi.performance||75],['Value for Money',qi.value_for_money||65],['Reliability',qi.reliability||70]];
-  $('qualityBars').innerHTML=qLabels.map(([lbl,val])=>{
-    const c=val>=75?'var(--gn)':val>=55?'var(--ac2)':'var(--am)';
-    return `<div class="q-row"><div class="q-label"><span>${lbl}</span><span style="color:${c};font-weight:600">${val}</span></div><div class="q-track"><div class="q-fill" style="width:${val}%;background:linear-gradient(90deg,${c},${c}88)"></div></div></div>`;
-  }).join('');
+  const ql=[['Build Quality',qi.build_quality||70,'var(--gn)'],['Performance',qi.performance||75,'var(--ac2)'],['Value for Money',qi.value_for_money||65,'var(--am)'],['Reliability',qi.reliability||70,'var(--or)']];
+  $('qBars').innerHTML=ql.map(([lb,v,c])=>`<div class="q-row"><div class="q-lbl"><span>${lb}</span><span style="color:${c};font-weight:700">${v}</span></div><div class="q-track"><div class="q-fill" style="width:${v}%;background:linear-gradient(90deg,${c},${c}99)"></div></div></div>`).join('');
 
   // Ideal/Avoid
   $('idealFor').textContent=d.idealBuyer||'—';
   $('avoidIf').textContent=d.avoidIf||'—';
 
-  // Pros
-  $('prosDiv').innerHTML=(d.pros||[]).map((p,i)=>
-    `<div class="pc-item" style="animation:slideRight .3s ${i*.06}s ease both"><span class="pc-dot pro"><i class="bi bi-check-lg" style="font-size:9px"></i></span><span>${p}</span></div>`
-  ).join('')||'<p style="color:var(--mt);font-size:13px">—</p>';
+  // Pros/Cons
+  $('prosD').innerHTML=(d.pros||[]).map((p,i)=>`<div class="pci" style="animation:slideR .35s ${i*.06}s ease both"><span class="pdot pro"><i class="bi bi-check-lg" style="font-size:9px"></i></span><span>${p}</span></div>`).join('')||'<p style="color:var(--mt);font-size:13px">—</p>';
+  $('consD').innerHTML=(d.cons||[]).map((c,i)=>`<div class="pci" style="animation:slideR .35s ${i*.06}s ease both"><span class="pdot con"><i class="bi bi-x-lg" style="font-size:9px"></i></span><span>${c}</span></div>`).join('')||'<p style="color:var(--mt);font-size:13px">—</p>';
+  $('tagsD').innerHTML=(d.tags||[]).map((t,i)=>`<span class="tag ${i<3?'thi':'tlo'}" style="animation:scaleIn .3s ${i*.04}s ease both">${t}</span>`).join('');
 
-  // Cons
-  $('consDiv').innerHTML=(d.cons||[]).map((c,i)=>
-    `<div class="pc-item" style="animation:slideRight .3s ${i*.06}s ease both"><span class="pc-dot con"><i class="bi bi-x-lg" style="font-size:9px"></i></span><span>${c}</span></div>`
-  ).join('')||'<p style="color:var(--mt);font-size:13px">—</p>';
-
-  // Tags
-  $('tagsDiv').innerHTML=(d.tags||[]).map((t,i)=>
-    `<span class="tag ${i<3?'tag-hi':'tag-lo'}" style="animation:scaleIn .3s ${i*.04}s ease both">${t}</span>`
-  ).join('');
-
-  // Source pills for reviews
-  const srcPills=$('sourcePills');
-  const srcNames=Object.keys(wsrc);
-  if(srcNames.length>0){
-    srcPills.innerHTML=srcNames.map(s=>{
-      const isReddit=s==='reddit';
-      const isExpert=['rtings.com','cnet.com','theverge.com','techradar.com'].includes(s);
-      const cls=isReddit?'reddit':isExpert?'expert':'';
-      const ico=isReddit?'bi-reddit':isExpert?'bi-award':'bi-globe';
-      return `<span class="src-pill ${cls}"><i class="bi ${ico}"></i>${s}</span>`;
-    }).join('');
-    srcPills.style.display='flex';
-  } else srcPills.innerHTML='';
+  // Source pills
+  const sp=$('srcPills');
+  const snames=Object.keys(ws);
+  sp.innerHTML=snames.map(s=>{
+    const isr=s==='reddit',isex=['rtings.com','cnet.com','theverge.com','techradar.com'].includes(s);
+    return `<span style="font-size:10px;padding:3px 9px;border-radius:8px;font-weight:500;display:inline-flex;align-items:center;gap:4px;${isr?'background:rgba(255,69,0,.08);color:#ff6534;border:1px solid rgba(255,69,0,.2)':isex?'background:rgba(34,211,160,.08);color:var(--gn);border:1px solid rgba(34,211,160,.2)':'background:var(--s3);color:var(--mt2);border:1px solid var(--b)'}"><i class="bi ${isr?'bi-reddit':isex?'bi-award':'bi-globe'}"></i>${s}</span>`;
+  }).join('');
 
   // Reviews
-  $('reviewsDiv').innerHTML=(d.reviews||[]).map((r,idx)=>{
-    const stars='★'.repeat(r.rating||3)+'☆'.repeat(5-(r.rating||3));
-    const sc2=r.sentiment==='positive'?'snt-p':r.sentiment==='negative'?'snt-n':'snt-u';
-    const sl=(r.sentiment||'neutral');
-    const srcIco=r.source==='reddit'?'bi-reddit':r.source?.includes('rtings')?'bi-award-fill':'bi-newspaper';
-    const srcName=r.source&&r.source!=='web'?r.source:'';
-    return `<div class="rev-item" style="animation:fadeIn .4s ${idx*.05}s ease both">
+  $('revsD').innerHTML=(d.reviews||[]).map((r,i)=>{
+    const st='★'.repeat(r.rating||3)+'☆'.repeat(5-(r.rating||3));
+    const sc2=r.sentiment==='positive'?'rsp':r.sentiment==='negative'?'rsn':'rsu';
+    const sico=r.source==='reddit'?'bi-reddit':r.source?.includes('rtings')?'bi-award-fill':'bi-newspaper';
+    const sn=r.source&&r.source!=='web'?r.source:'';
+    return `<div class="rev" style="animation:fadeIn .4s ${i*.05}s ease both">
       <div class="d-flex align-items-center gap-2 flex-wrap">
-        <span class="stars-row">${stars}</span>
-        <span class="rev-author">${r.author||'User'}</span>
-        <span class="snt ${sc2}">${sl.charAt(0).toUpperCase()+sl.slice(1)}</span>
-        ${srcName?`<span class="src-chip"><i class="bi ${srcIco} me-1"></i>${srcName}</span>`:''}
+        <span class="stars">${st}</span>
+        <span class="rauth">${r.author||'User'}</span>
+        <span class="rsnt ${sc2}">${(r.sentiment||'neutral').charAt(0).toUpperCase()+(r.sentiment||'neutral').slice(1)}</span>
+        ${sn?`<span class="rsrc"><i class="bi ${sico} me-1"></i>${sn}</span>`:''}
       </div>
-      <p class="rev-text mb-0">${r.text||''}</p>
+      <p class="rtxt mb-0">${r.text||''}</p>
     </div>`;
   }).join('')||'<p style="color:var(--mt);text-align:center;padding:20px;font-size:13px">No reviews found</p>';
 
@@ -952,45 +933,29 @@ function render(d){
   const plats=d.platforms||[];
   const pnums=plats.map(p=>parseFloat((p.price||'0').replace(/[^0-9.]/g,''))||9999);
   const bnum=Math.min(...pnums);
-  const cnum=pnums[plats.findIndex(p=>p.current)]||0;
-  const savings=cnum&&bnum&&cnum>bnum?`Save $${(cnum-bnum).toFixed(2)} by shopping on ${plats[pnums.indexOf(bnum)]?.name}!`:'';
-  $('pricesDiv').innerHTML=plats.map((p,i)=>{
-    const best=pnums[i]===bnum, cur=p.current;
-    return `<div class="price-row ${best?'p-best':cur?'p-cur':''}">
-      <span class="p-ico">${p.icon||'🛒'}</span>
-      <span class="p-name">${p.name||''}${cur?' <span style="font-size:10px;color:var(--mt)">(current)</span>':''}</span>
-      <span class="p-amt" style="color:${best?'var(--gn)':'var(--tx)'}">${p.price||''}</span>
-      ${best?'<span class="p-best-tag"><i class="bi bi-trophy-fill me-1"></i>Best</span>':''}
-    </div>`;
-  }).join('')||'<p style="color:var(--mt);font-size:13px">—</p>';
-  $('savingsDiv').innerHTML=savings?`<i class="bi bi-lightbulb-fill me-1"></i>${savings}`:'';
+  const curIdx=plats.findIndex(p=>p.current);
+  const cnum=curIdx>=0?pnums[curIdx]:0;
+  const savings=cnum&&bnum&&cnum>bnum?`<i class="bi bi-lightbulb-fill me-1"></i>You could save <b>$${(cnum-bnum).toFixed(2)}</b> by buying from <b>${plats[pnums.indexOf(bnum)]?.name}</b>!`:'';
+  $('pricesD').innerHTML=plats.map((p,i)=>`<div class="pr ${pnums[i]===bnum?'pb':p.current?'pc':''}">
+    <span class="pico">${p.icon||'🛒'}</span>
+    <span class="pn">${p.name||''}${p.current?' <span style="font-size:10px;color:var(--mt)">(current)</span>':''}</span>
+    <span class="pamt" style="color:${pnums[i]===bnum?'var(--gn)':'var(--tx)'}">${p.price||''}</span>
+    ${pnums[i]===bnum?'<span class="ptag"><i class="bi bi-trophy-fill me-1"></i>Best</span>':''}
+  </div>`).join('')||'<p style="color:var(--mt);font-size:13px">—</p>';
+  $('savingsD').innerHTML=savings;
 
-  // History
-  histData=d.priceHistory||[];
-  if(histData.length){
-    const hp=histData.map(h=>h.price), mn=Math.min(...hp), mx=Math.max(...hp), rng=mx-mn||1;
-    $('histChart').innerHTML=histData.map((h,i)=>{
-      const ht=20+75*((h.price-mn)/rng);
-      const cls=h.price===mn?'lowest':h.price===mx?'high':'cur';
-      return `<div class="h-col">
-        <div class="h-price">$${h.price}</div>
-        <div class="h-bar ${cls}" style="height:${ht}px"></div>
-        <div class="h-month">${h.month}</div>
-      </div>`;
-    }).join('');
-    $('histMeta').innerHTML=`
-      <span><i class="bi bi-arrow-down-circle-fill me-1" style="color:var(--gn)"></i>Lowest: <b style="color:var(--gn)">${d.lowestPrice||'—'}</b></span>
-      <span><i class="bi bi-arrow-up-circle-fill me-1" style="color:var(--rd)"></i>Highest: <b style="color:var(--rd)">${d.highestPrice||'—'}</b></span>
-      <span><i class="bi bi-circle-fill me-1" style="font-size:8px;color:var(--ac2)"></i>Current: <b style="color:var(--ac2)">${d.currentPrice||'—'}</b></span>`;
-  }
+  // History meta
+  $('histMeta').innerHTML=`
+    <span><i class="bi bi-arrow-down-circle-fill me-1" style="color:var(--gn)"></i>Lowest: <b style="color:var(--gn)">${d.lowestPrice||'—'}</b></span>
+    <span><i class="bi bi-arrow-up-circle-fill me-1" style="color:var(--rd)"></i>Highest: <b style="color:var(--rd)">${d.highestPrice||'—'}</b></span>
+    <span><i class="bi bi-circle-fill me-1" style="font-size:8px;color:var(--ac2)"></i>Current: <b style="color:var(--ac2)">${d.currentPrice||'—'}</b></span>`;
 
   // Show results
-  $('resultsWrap').classList.add('show');
-
-  // Reset to overview tab
-  document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('on'));
-  document.querySelector('.t-btn').classList.add('on');
-  document.querySelectorAll('.t-pane').forEach(p=>p.classList.remove('on'));
+  $('results').classList.add('on');
+  // Reset tabs
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  document.querySelector('.tb').classList.add('on');
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('on'));
   $('t-ov').classList.add('on');
   window.scrollTo({top:0,behavior:'smooth'});
 }
