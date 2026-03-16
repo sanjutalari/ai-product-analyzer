@@ -111,6 +111,7 @@ async def analyze(req: AnalyzeRequest, bg: BackgroundTasks):
         "priceHistory":  hi.get("history", []),
         "webSources":    sources,
         "hasWebReviews": len(web_reviews) > 0,
+        "qualityIndicators": lr.get("quality_indicators", {}),
     }
 
     bg.add_task(save_product_analysis, url, result)
