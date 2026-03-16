@@ -1,4 +1,4 @@
-import logging, os, time
+import asyncio, logging, os, time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +12,7 @@ from price_compare   import PriceComparator
 from price_history   import PriceHistoryTracker
 from scoring         import ScoreGenerator
 from llm_agent       import LLMAgent
-from reddit_scraper  import search_reddit_reviews
+from web_search      import search_web_reviews
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -47,51 +47,46 @@ async def analyze(req: AnalyzeRequest, bg: BackgroundTasks):
         if cached:
             return {"source": "cache", "data": cached}
 
-    # ── Step 1: Scrape product page ──────────────────────────
-    scraper = ProductScraper()
-    pd2     = await scraper.scrape(url)
+    # ── 1. Scrape product page ─────────────────────────────
+    pd2        = await ProductScraper().scrape(url)
     pd2["url"] = url
 
-    # ── Step 2: AI analysis (uses product knowledge if scrape failed) ──
+    # ── 2. AI analysis ─────────────────────────────────────
     lr           = await LLMAgent().analyze(pd2)
     product_name = lr.get("productName") or pd2.get("name", "Unknown Product")
 
-    # Update price from AI if scraper missed it
     if lr.get("estimatedPrice") and not pd2.get("price"):
         pd2["price"] = lr["estimatedPrice"]
 
-    # ── Step 3: Reddit reviews (runs in parallel with other tasks) ──
-    reddit_task = search_reddit_reviews(product_name, max_results=6)
+    # ── 3. Web search for reviews (whole internet) ─────────
+    # Runs in parallel with price/history tasks
+    web_reviews_task = search_web_reviews(product_name, max_results=10)
+    rr_task          = ReviewAnalyzer().analyze(pd2.get("raw_reviews", []))
+    pr_task          = PriceComparator().compare(product_name, pd2.get("price", ""), url)
+    hi_task          = PriceHistoryTracker().get_history(url, pd2.get("price", ""))
 
-    # ── Step 4: Review analysis from scraped reviews ─────────
-    rr_task = ReviewAnalyzer().analyze(pd2.get("raw_reviews", []))
-
-    # ── Step 5: Price comparison ─────────────────────────────
-    pr_task = PriceComparator().compare(product_name, pd2.get("price", ""), url)
-
-    # ── Step 6: Price history ─────────────────────────────────
-    hi_task = PriceHistoryTracker().get_history(url, pd2.get("price", ""))
-
-    # Run all async tasks in parallel
-    import asyncio
-    reddit_reviews, rr, pr, hi = await asyncio.gather(
-        reddit_task, rr_task, pr_task, hi_task
+    web_reviews, rr, pr, hi = await asyncio.gather(
+        web_reviews_task, rr_task, pr_task, hi_task
     )
 
-    # ── Step 7: Merge reviews — Reddit + scraped ─────────────
+    # ── 4. Merge all reviews ───────────────────────────────
     scraped_reviews = rr.get("reviews", [])
-    all_reviews     = scraped_reviews + reddit_reviews
+    all_reviews     = scraped_reviews + web_reviews
 
-    # Re-analyze combined reviews if we got Reddit data
-    if reddit_reviews:
-        all_ratings = [r.get("rating", 3) for r in all_reviews if r.get("rating")]
-        combined_avg = round(sum(all_ratings) / len(all_ratings), 1) if all_ratings else rr.get("avg_rating", 0)
-        rr["avg_rating"]    = combined_avg
-        rr["review_count"]  = f"{len(all_reviews)}+"
-        rr["reviews"]       = all_reviews[:10]
-        log.info(f"Combined {len(scraped_reviews)} scraped + {len(reddit_reviews)} Reddit reviews")
+    if web_reviews:
+        all_ratings     = [r.get("rating", 3) for r in all_reviews if r.get("rating")]
+        combined_avg    = round(sum(all_ratings) / len(all_ratings), 1) if all_ratings else rr.get("avg_rating", 0)
+        rr["avg_rating"]   = combined_avg
+        rr["review_count"] = f"{len(all_reviews)}+"
+        rr["reviews"]      = all_reviews[:12]
 
-    # ── Step 8: Score ─────────────────────────────────────────
+    # Count sources
+    sources = {}
+    for rv in all_reviews:
+        src = rv.get("source", "web")
+        sources[src] = sources.get(src, 0) + 1
+
+    # ── 5. Score ───────────────────────────────────────────
     sc = ScoreGenerator().generate(pd2, lr, rr, pr)
 
     result = {
@@ -114,8 +109,8 @@ async def analyze(req: AnalyzeRequest, bg: BackgroundTasks):
         "reviews":       rr.get("reviews", []),
         "platforms":     pr.get("platforms", []),
         "priceHistory":  hi.get("history", []),
-        "redditReviews": len(reddit_reviews) > 0,
-        "redditCount":   len(reddit_reviews),
+        "webSources":    sources,
+        "hasWebReviews": len(web_reviews) > 0,
     }
 
     bg.add_task(save_product_analysis, url, result)

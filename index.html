@@ -411,8 +411,8 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
       <div class="dark-card">
         <div class="d-flex align-items-center justify-content-between mb-3">
           <div class="panel-title mb-0"><i class="bi bi-chat-dots-fill me-1" style="color:var(--ac2)"></i>Customer Reviews</div>
-          <span id="redditBadge" class="d-none" style="font-size:11px;padding:3px 9px;border-radius:8px;background:rgba(255,69,0,.1);color:#ff4500;border:1px solid rgba(255,69,0,.2)">
-            <i class="bi bi-reddit me-1"></i>Includes Reddit
+          <span id="webSourcesBadge" class="d-none" style="font-size:11px;padding:3px 9px;border-radius:8px;background:rgba(34,211,160,.1);color:#22d3a0;border:1px solid rgba(34,211,160,.2)">
+            <i class="bi bi-globe me-1"></i><span id="webSourcesText">Web sources</span>
           </span>
         </div>
         <div id="reviewsDiv"></div>
@@ -568,11 +568,14 @@ function renderResults(d) {
   $('productName').textContent = d.productName || 'Product';
   $('productUrl').textContent  = d.url || '';
 
-  // Source badge
+  // Source badge — show web sources found
   const src = $('sourceInfo');
-  if(d.redditReviews) {
-    src.innerHTML = '<i class="bi bi-reddit me-1"></i>Reddit enhanced';
-    src.style.cssText = 'font-size:11px;padding:3px 9px;border-radius:8px;background:rgba(255,69,0,.1);color:#ff4500;border:1px solid rgba(255,69,0,.2)';
+  const wsrc = d.webSources || {};
+  const srcNames = Object.keys(wsrc);
+  if(srcNames.length > 0) {
+    const total = Object.values(wsrc).reduce((a,b)=>a+b,0);
+    src.innerHTML = `<i class="bi bi-globe me-1"></i>${total} reviews from ${srcNames.length} sources`;
+    src.style.cssText = 'font-size:11px;padding:3px 9px;border-radius:8px;background:rgba(34,211,160,.1);color:#22d3a0;border:1px solid rgba(34,211,160,.2)';
   } else {
     src.innerHTML = '<i class="bi bi-robot me-1"></i>AI analyzed';
     src.style.cssText = '';
@@ -611,15 +614,25 @@ function renderResults(d) {
   ).join('');
 
   // Reviews + Reddit badge
-  const hasReddit = (d.reviews||[]).some(r => r.source === 'reddit');
-  $('redditBadge').classList.toggle('d-none', !hasReddit);
+  const hasWeb = d.hasWebReviews || false;
+  const wsBadge = $('webSourcesBadge');
+  if(wsBadge) wsBadge.classList.toggle('d-none', !hasWeb);
+  const wsText = $('webSourcesText');
+  if(wsText && d.webSources) {
+    const names = Object.keys(d.webSources).slice(0,3).join(', ');
+    wsText.textContent = `Sources: ${names}`;
+  }
 
   $('reviewsDiv').innerHTML = (d.reviews||[]).map((r,idx) => {
     const stars = '★'.repeat(r.rating||3) + '☆'.repeat(5-(r.rating||3));
     const sc2   = r.sentiment==='positive'?'snt-pos':r.sentiment==='negative'?'snt-neg':'snt-neu';
     const sl    = (r.sentiment||'neutral');
-    const srcTag = r.source==='reddit'
-      ? `<span class="review-src ms-1"><i class="bi bi-reddit me-1"></i>Reddit</span>` : '';
+    const srcIcon = r.source==='reddit' ? 'bi-reddit' :
+                     r.source?.includes('rtings') ? 'bi-award-fill' :
+                     r.source==='web' || !r.source ? 'bi-globe' : 'bi-newspaper';
+    const srcLabel = r.source && r.source !== 'web' ? r.source : 'web';
+    const srcTag = r.source && r.source !== 'scrape'
+      ? `<span class="review-src ms-1"><i class="bi ${srcIcon} me-1"></i>${srcLabel}</span>` : '';
     return `<div class="review-item" style="animation-delay:${idx*0.05}s">
       <div class="d-flex align-items-center gap-2 mb-1">
         <span class="stars">${stars}</span>
