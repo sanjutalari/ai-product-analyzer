@@ -466,7 +466,9 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
           <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <span class="vchip" id="verdictEl"></span>
             <span id="rcBadge" style="font-size:12px;color:var(--mt)"></span>
+            <span id="confBadge"></span>
           </div>
+          <div style="font-size:10px;color:var(--mt);margin-bottom:8px" id="modelsUsed"></div>
           <div class="d-flex gap-2 flex-wrap">
             <button class="act-btn" onclick="copyLink()"><i class="bi bi-share me-1"></i>Share</button>
             <button class="act-btn" onclick="copyJSON()"><i class="bi bi-code-slash me-1"></i>Export</button>
@@ -508,6 +510,7 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
       <button class="tb" onclick="swTab(this,'t-pr')"><i class="bi bi-currency-exchange"></i><span>Prices</span></button>
       <button class="tb" onclick="swTab(this,'t-hi')"><i class="bi bi-graph-up-arrow"></i><span>History</span></button>
       <button class="tb" onclick="swTab(this,'t-ai')"><i class="bi bi-robot"></i><span>Ask AI</span></button>
+      <button class="tb" onclick="swTab(this,'t-cm')"><i class="bi bi-bar-chart-steps"></i><span>Compare</span></button>
     </div>
 
     <!-- Overview -->
@@ -554,6 +557,22 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
         </div>
         <div class="chart-box"><canvas id="priceChart"></canvas></div>
         <div class="mt-3 d-flex flex-wrap gap-4" id="histMeta" style="font-size:12px;color:var(--mt)"></div>
+      </div>
+    </div>
+
+    <!-- Competitors -->
+    <div id="t-cm" class="tp">
+      <div class="glass p-4 mb-3">
+        <div class="sh"><i class="bi bi-bar-chart-steps" style="color:var(--ac2)"></i>Competitor Benchmarking</div>
+        <div id="competitorsD"></div>
+      </div>
+      <div class="glass p-4 mb-3">
+        <div class="sh"><i class="bi bi-chat-left-text" style="color:var(--am)"></i>Most Praised &amp; Criticized</div>
+        <div class="row g-3" id="praiseD"></div>
+      </div>
+      <div class="glass p-4">
+        <div class="sh"><i class="bi bi-diagram-3" style="color:var(--gn)"></i>Common Themes</div>
+        <div id="themesD"></div>
       </div>
     </div>
 
@@ -843,6 +862,17 @@ function render(d){
   sb.innerHTML=wc>0?`<i class="bi bi-globe me-1"></i>${wc} sources`:'<i class="bi bi-robot me-1"></i>AI';
   sb.style.cssText=wc>0?'font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(34,211,160,.08);color:var(--gn);border:1px solid rgba(34,211,160,.15)':'font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(124,106,247,.08);color:var(--ac3);border:1px solid rgba(124,106,247,.15)';
   G('rcBadge').textContent=d.reviewCount?`${d.reviewCount} reviews`:'';
+  // Confidence badge
+  const cb=G('confBadge');
+  if(cb&&d.consensusConfidence){
+    const conf=d.consensusConfidence;
+    const confCol=conf>=80?'var(--gn)':conf>=65?'var(--am)':'var(--rd)';
+    cb.innerHTML=`<i class="bi bi-shield-check me-1"></i>${conf}% confident`;
+    cb.style.cssText=`font-size:11px;padding:3px 10px;border-radius:8px;background:${confCol}18;color:${confCol};border:1px solid ${confCol}44`;
+  }
+  // Models used
+  const mu=G('modelsUsed');
+  if(mu&&d.modelsUsed) mu.textContent=`${d.modelsUsed} AI model${d.modelsUsed>1?'s':''} analyzed`;;
   const ve=G('verdictEl');ve.innerHTML=`<i class="bi ${vi} me-1"></i>${vl}`;ve.style.cssText=`background:${vbg};color:${vc};border-color:${vb}`;
 
   // Images — use proxy approach for cross-origin images
@@ -885,6 +915,47 @@ function render(d){
 
   // Prices
   refreshPrices(d);
+
+  // Competitors
+  const comps=d.competitors||[];
+  G('competitorsD').innerHTML=comps.length?comps.map(c=>{
+    const isBetter=c.vs==='better',isWorse=c.vs==='worse';
+    const col=isBetter?'var(--gn)':isWorse?'var(--rd)':'var(--am)';
+    const ico=isBetter?'bi-arrow-up-circle-fill':isWorse?'bi-arrow-down-circle-fill':'bi-dash-circle-fill';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--b)">
+      <i class="bi ${ico}" style="color:${col};font-size:18px;flex-shrink:0"></i>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--tx)">${c.name}</div><div style="font-size:12px;color:var(--mt)">${c.reason||''}</div></div>
+      <span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:${col}18;color:${col};border:1px solid ${col}44">${c.vs||'similar'}</span>
+    </div>`;
+  }).join(''):'<p style="color:var(--mt);font-size:13px">No competitor data available</p>';
+
+  // Most praised / criticized
+  const pEl=G('praiseD');
+  if(pEl) pEl.innerHTML=`
+    <div class="col-md-6"><div style="background:rgba(34,211,160,.05);border:1px solid rgba(34,211,160,.15);border-radius:10px;padding:13px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--gn);margin-bottom:6px;font-weight:600"><i class="bi bi-hand-thumbs-up-fill me-1"></i>Most Praised</div>
+      <div style="font-size:13px;color:var(--mt2)">${d.mostPraised||'—'}</div>
+    </div></div>
+    <div class="col-md-6"><div style="background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.15);border-radius:10px;padding:13px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--rd);margin-bottom:6px;font-weight:600"><i class="bi bi-hand-thumbs-down-fill me-1"></i>Most Criticized</div>
+      <div style="font-size:13px;color:var(--mt2)">${d.mostCriticized||'—'}</div>
+    </div></div>`;
+
+  // Common themes
+  const themes=d.commonThemes||[];
+  G('themesD').innerHTML=themes.length?themes.map(t=>{
+    const isPos=t.sentiment==='positive';
+    const col2=isPos?'var(--gn)':'var(--rd)';
+    const pct=Math.min(100,(t.count||1)*12);
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mt2);margin-bottom:4px">
+        <span>${t.theme}</span><span style="color:${col2};font-weight:600">${t.sentiment} · ${t.count||1} mentions</span>
+      </div>
+      <div style="height:6px;background:var(--s4);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${col2};border-radius:3px;transition:width 1.2s ease"></div>
+      </div>
+    </div>`;
+  }).join(''):'<p style="color:var(--mt);font-size:13px">No theme data available</p>';
 
   // Chat
   G('chatProdLbl').textContent=d.productName||'this product';
