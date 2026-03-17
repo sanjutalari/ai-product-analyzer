@@ -1,3 +1,4 @@
+import re
 import logging, re, asyncio
 from urllib.parse import urlparse, unquote
 import httpx

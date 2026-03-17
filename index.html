@@ -392,7 +392,7 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
 
   <!-- HERO -->
   <div class="hero fu">
-    <div class="hero-pill"><i class="bi bi-stars"></i>AI-Powered · Web Reviews · 8+ Images · 7 Currencies</div>
+    <div class="hero-pill"><i class="bi bi-stars"></i>AI · YouTube · Reddit · Web · 3-Model Consensus · 7 Currencies</div>
     <h1 class="hero-title">Analyze Any Product<br>with AI Intelligence</h1>
     <p class="hero-sub">Paste any URL — we scrape, fetch images, search the web for reviews, and give you a deep AI-powered analysis in your currency.</p>
     <div class="stat-row">
@@ -466,6 +466,7 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
           <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <span class="vchip" id="verdictEl"></span>
             <span id="rcBadge" style="font-size:12px;color:var(--mt)"></span>
+            <span id="ytBadge" style="display:none;font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(255,68,68,.08);color:#ff4444;border:1px solid rgba(255,68,68,.2);align-items:center;gap:4px"></span>
             <span id="confBadge"></span>
           </div>
           <div style="font-size:10px;color:var(--mt);margin-bottom:8px" id="modelsUsed"></div>
@@ -622,8 +623,8 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
     <p style="font-size:13px;color:var(--mt);max-width:400px;margin:0 auto;line-height:1.75">Amazon, Flipkart, Best Buy, Walmart or any site. Prices shown in your selected currency.</p>
     <div class="feat-grid">
       <div class="feat"><span class="feat-ico" style="animation-delay:.0s">🔍</span><div class="feat-lbl">Smart Scraping</div><div class="feat-desc">Real data</div></div>
-      <div class="feat"><span class="feat-ico" style="animation-delay:.3s">🖼️</span><div class="feat-lbl">8+ Images</div><div class="feat-desc">Auto-fetched</div></div>
-      <div class="feat"><span class="feat-ico" style="animation-delay:.6s">🌐</span><div class="feat-lbl">Web Reviews</div><div class="feat-desc">Reddit+experts</div></div>
+      <div class="feat"><span class="feat-ico" style="animation-delay:.3s">▶️</span><div class="feat-lbl">YouTube Reviews</div><div class="feat-desc">Video opinions</div></div>
+      <div class="feat"><span class="feat-ico" style="animation-delay:.6s">🌐</span><div class="feat-lbl">Web+Reddit</div><div class="feat-desc">Expert+users</div></div>
       <div class="feat"><span class="feat-ico" style="animation-delay:.9s">💱</span><div class="feat-lbl">7 Currencies</div><div class="feat-desc">Live convert</div></div>
       <div class="feat"><span class="feat-ico" style="animation-delay:1.2s">📈</span><div class="feat-lbl">Price Graph</div><div class="feat-desc">6-month chart</div></div>
       <div class="feat"><span class="feat-ico" style="animation-delay:1.5s">🤖</span><div class="feat-lbl">Ask AI</div><div class="feat-desc">Chat about it</div></div>
@@ -862,6 +863,14 @@ function render(d){
   sb.innerHTML=wc>0?`<i class="bi bi-globe me-1"></i>${wc} sources`:'<i class="bi bi-robot me-1"></i>AI';
   sb.style.cssText=wc>0?'font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(34,211,160,.08);color:var(--gn);border:1px solid rgba(34,211,160,.15)':'font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(124,106,247,.08);color:var(--ac3);border:1px solid rgba(124,106,247,.15)';
   G('rcBadge').textContent=d.reviewCount?`${d.reviewCount} reviews`:'';
+  // YouTube badge
+  const ytBadge=G('ytBadge');
+  if(ytBadge){
+    if(d.youtubeReviewCount>0){
+      ytBadge.innerHTML=`<i class="bi bi-youtube me-1" style="color:#ff4444"></i>${d.youtubeReviewCount} YouTube reviews`;
+      ytBadge.style.display='inline-flex';
+    } else ytBadge.style.display='none';
+  }
   // Confidence badge
   const cb=G('confBadge');
   if(cb&&d.consensusConfidence){
@@ -902,13 +911,22 @@ function render(d){
   G('sentLeg').innerHTML=`<span><i class="bi bi-circle-fill me-1" style="color:var(--gn);font-size:8px"></i>Positive ${sb2.positive||0}%</span><span><i class="bi bi-circle-fill me-1" style="color:var(--ac2);font-size:8px"></i>Neutral ${sb2.neutral||0}%</span><span><i class="bi bi-circle-fill me-1" style="color:var(--rd);font-size:8px"></i>Negative ${sb2.negative||0}%</span>`;
 
   // Source pills
-  G('srcPills').innerHTML=Object.keys(ws).map(s=>{const isr=s==='reddit',isex=['rtings.com','cnet.com','theverge.com','techradar.com'].includes(s);return `<span style="font-size:10px;padding:3px 8px;border-radius:8px;font-weight:500;display:inline-flex;align-items:center;gap:4px;${isr?'background:rgba(255,69,0,.08);color:#ff6534;border:1px solid rgba(255,69,0,.2)':isex?'background:rgba(34,211,160,.08);color:var(--gn);border:1px solid rgba(34,211,160,.2)':'background:var(--s3);color:var(--mt2);border:1px solid var(--b)'}"><i class="bi ${isr?'bi-reddit':isex?'bi-award':'bi-globe'}"></i>${s}</span>`;}).join('');
+  G('srcPills').innerHTML=Object.keys(ws).map(s=>{
+    const isr=s==='reddit', isyt=s==='youtube',
+          isex=['rtings.com','cnet.com','theverge.com','techradar.com'].includes(s);
+    const style=isr?'background:rgba(255,69,0,.08);color:#ff6534;border:1px solid rgba(255,69,0,.2)':
+                isyt?'background:rgba(255,0,0,.08);color:#ff4444;border:1px solid rgba(255,0,0,.2)':
+                isex?'background:rgba(34,211,160,.08);color:var(--gn);border:1px solid rgba(34,211,160,.2)':
+                     'background:var(--s3);color:var(--mt2);border:1px solid var(--b)';
+    const ico=isr?'bi-reddit':isyt?'bi-youtube':isex?'bi-award':'bi-globe';
+    return `<span style="font-size:10px;padding:3px 8px;border-radius:8px;font-weight:500;display:inline-flex;align-items:center;gap:4px;${style}"><i class="bi ${ico}"></i>${s}</span>`;
+  }).join('');
 
   // Reviews
   G('revsD').innerHTML=(d.reviews||[]).map((r,i)=>{
     const st='★'.repeat(r.rating||3)+'☆'.repeat(5-(r.rating||3));
     const sc2=r.sentiment==='positive'?'rsp':r.sentiment==='negative'?'rsn':'rsu';
-    const sico=r.source==='reddit'?'bi-reddit':r.source?.includes('rtings')?'bi-award-fill':'bi-newspaper';
+    const sico=r.source==='reddit'?'bi-reddit':r.source==='youtube'?'bi-youtube':r.source?.includes('rtings')?'bi-award-fill':'bi-newspaper';
     const sn=r.source&&r.source!=='web'?r.source:'';
     return `<div class="rv" style="animation:fadeIn .4s ${i*.05}s ease both"><div class="d-flex align-items-center gap-2 flex-wrap"><span class="stars">${st}</span><span class="rauth">${r.author||'User'}</span><span class="rsnt ${sc2}">${(r.sentiment||'neutral').charAt(0).toUpperCase()+(r.sentiment||'neutral').slice(1)}</span>${sn?`<span class="rsrc"><i class="bi ${sico} me-1"></i>${sn}</span>`:''}</div><p class="rtxt mb-0">${r.text||''}</p></div>`;
   }).join('')||'<p style="color:var(--mt);text-align:center;padding:20px;font-size:13px">No reviews found</p>';
