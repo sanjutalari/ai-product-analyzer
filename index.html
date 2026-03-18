@@ -260,7 +260,7 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
 .pr:hover .visit-hint{opacity:1}
 
 /* ── CHART ── */
-.chart-box{position:relative;height:220px}
+.chart-box{position:relative;height:220px;min-height:220px;display:block}
 
 /* ── INFO BOXES ── */
 .ib{border-radius:13px;padding:13px 15px}
@@ -392,7 +392,7 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
 
   <!-- HERO -->
   <div class="hero fu">
-    <div class="hero-pill"><i class="bi bi-stars"></i>AI · YouTube · Reddit · Web · 3-Model Consensus · 7 Currencies</div>
+    <div class="hero-pill"><i class="bi bi-stars"></i>URL or Product Name · YouTube · Reddit · 3-Model AI · 7 Currencies</div>
     <h1 class="hero-title">Analyze Any Product<br>with AI Intelligence</h1>
     <p class="hero-sub">Paste any URL — we scrape, fetch images, search the web for reviews, and give you a deep AI-powered analysis in your currency.</p>
     <div class="stat-row">
@@ -405,7 +405,7 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
       <div class="s-glow"></div>
       <div class="s-inner">
         <i class="bi bi-link-45deg" style="color:var(--mt);font-size:18px;flex-shrink:0;margin-right:8px"></i>
-        <input type="text" class="s-inp form-control" id="urlInput" placeholder="Paste product URL — Amazon, Flipkart, Best Buy..." onkeydown="if(event.key==='Enter')go()"/>
+        <input type="text" class="s-inp form-control" id="urlInput" placeholder="Paste product URL or type product name (e.g. Sony WH-1000XM5)..." onkeydown="if(event.key==='Enter')go()"/>
         <button class="s-btn" id="analyzeBtn" onclick="go()"><i class="bi bi-search me-1"></i>Analyze</button>
       </div>
     </div>
@@ -466,6 +466,7 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
           <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <span class="vchip" id="verdictEl"></span>
             <span id="rcBadge" style="font-size:12px;color:var(--mt)"></span>
+            <span id="nameInputBadge" style="display:none;font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(251,191,36,.08);color:var(--am);border:1px solid rgba(251,191,36,.2)"><i class="bi bi-keyboard me-1"></i>Name search mode</span>
             <span id="ytBadge" style="display:none;font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(255,68,68,.08);color:#ff4444;border:1px solid rgba(255,68,68,.2);align-items:center;gap:4px"></span>
             <span id="confBadge"></span>
           </div>
@@ -511,6 +512,7 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
       <button class="tb" onclick="swTab(this,'t-pr')"><i class="bi bi-currency-exchange"></i><span>Prices</span></button>
       <button class="tb" onclick="swTab(this,'t-hi')"><i class="bi bi-graph-up-arrow"></i><span>History</span></button>
       <button class="tb" onclick="swTab(this,'t-ai')"><i class="bi bi-robot"></i><span>Ask AI</span></button>
+      <button class="tb" onclick="swTab(this,'t-al')"><i class="bi bi-stars"></i><span>Alternatives</span></button>
       <button class="tb" onclick="swTab(this,'t-cm')"><i class="bi bi-bar-chart-steps"></i><span>Compare</span></button>
     </div>
 
@@ -611,6 +613,15 @@ body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-h
           <input type="text" class="ci form-control" id="chatIn" placeholder="Ask anything about this product..." onkeydown="if(event.key==='Enter')sendChat()"/>
           <button class="cs-btn" onclick="sendChat()"><i class="bi bi-send-fill" style="font-size:14px"></i></button>
         </div>
+      </div>
+    </div>
+
+    <!-- Alternatives Tab -->
+    <div id="t-al" class="tp">
+      <div class="glass p-4 mb-3">
+        <div class="sh"><i class="bi bi-stars" style="color:var(--am)"></i>Recommended Alternatives</div>
+        <p style="font-size:12px;color:var(--mt);margin-bottom:16px"><i class="bi bi-info-circle me-1" style="color:var(--ac2)"></i>Products you should also consider — click to analyze any of them</p>
+        <div id="altCards"></div>
       </div>
     </div>
 
@@ -720,41 +731,97 @@ function swImg(th,url){
 
 // ── Purple line chart ─────────────────────────────────────────────────────
 function renderChart(history){
-  if(!history||!history.length)return;
-  const ctx=G('priceChart').getContext('2d');
-  if(chartInst){chartInst.destroy();chartInst=null;}
-  const raw=history.map(h=>h.price);
-  const prices=raw.map(p=>+(p*getCurr().rate).toFixed(2));
-  const labels=history.map(h=>h.month);
-  const mn=Math.min(...prices),mx=Math.max(...prices);
-  const sym=getCurr().sym;const pad=(mx-mn)*.35||mx*.12;
-  chartInst=new Chart(ctx,{
-    type:'line',
-    data:{labels,datasets:[{
-      label:`Price (${cc})`,data:prices,
-      borderColor:'#a594f9',borderWidth:3,
-      backgroundColor:c=>{const g=c.chart.ctx.createLinearGradient(0,0,0,220);g.addColorStop(0,'rgba(124,106,247,.45)');g.addColorStop(.65,'rgba(124,106,247,.1)');g.addColorStop(1,'rgba(124,106,247,.01)');return g;},
-      pointBackgroundColor:prices.map(p=>p===mn?'#22d3a0':p===mx?'#f87171':'#c4b5fd'),
-      pointBorderColor:'rgba(5,5,9,.9)',pointBorderWidth:2.5,
-      pointRadius:7,pointHoverRadius:10,
-      pointHoverBackgroundColor:'#7c6af7',pointHoverBorderColor:'white',pointHoverBorderWidth:2,
-      tension:.42,fill:true,
-    }]},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      animation:{duration:1600,easing:'easeInOutQuart'},
-      plugins:{
-        legend:{display:false},
-        tooltip:{backgroundColor:'rgba(13,13,22,.97)',borderColor:'rgba(124,106,247,.5)',borderWidth:1,titleColor:'#f0effe',bodyColor:'#9898b8',padding:13,cornerRadius:13,displayColors:false,
-          callbacks:{title:i=>`${i[0].label}`,label:i=>`  ${sym}${i.parsed.y.toLocaleString()}${i.parsed.y===mn?' 🎯 Lowest':i.parsed.y===mx?' ⚠ Highest':''}`}}
+  if(!history||!history.length){
+    const box=G('priceChart');
+    if(box)box.parentElement.innerHTML='<p style="color:var(--mt);text-align:center;padding:40px;font-size:13px"><i class="bi bi-bar-chart me-2"></i>No price history yet</p>';
+    return;
+  }
+  try{
+    const canvas=G('priceChart');
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    if(chartInst){chartInst.destroy();chartInst=null;}
+    const curr=getCurr();
+    const raw=history.map(h=>+(parseFloat(h.price)||0));
+    const prices=raw.map(p=>parseFloat((p*curr.rate).toFixed(2)));
+    const labels=history.map(h=>h.month||'');
+    const mn=Math.min(...prices),mx=Math.max(...prices);
+    const pad=Math.max((mx-mn)*.3, mx*.08, 1);
+    const sym=curr.sym;
+    chartInst=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels,
+        datasets:[{
+          label:`Price (${cc})`,
+          data:prices,
+          borderColor:'#a594f9',
+          borderWidth:2.5,
+          backgroundColor:function(ctx2){
+            const g=ctx2.chart.ctx.createLinearGradient(0,0,0,200);
+            g.addColorStop(0,'rgba(124,106,247,.4)');
+            g.addColorStop(.5,'rgba(124,106,247,.12)');
+            g.addColorStop(1,'rgba(124,106,247,.01)');
+            return g;
+          },
+          pointBackgroundColor:prices.map(p=>p===mn?'#22d3a0':p===mx?'#f87171':'#c4b5fd'),
+          pointBorderColor:'rgba(5,5,9,.9)',
+          pointBorderWidth:2,
+          pointRadius:6,
+          pointHoverRadius:9,
+          tension:.42,
+          fill:true,
+        }]
       },
-      scales:{
-        x:{grid:{color:'rgba(255,255,255,.04)',drawBorder:false},ticks:{color:'#5a5a78',font:{size:11}},border:{display:false}},
-        y:{grid:{color:'rgba(255,255,255,.04)',drawBorder:false},ticks:{color:'#5a5a78',font:{size:11},callback:v=>`${sym}${v}`},min:Math.max(0,mn-pad),max:mx+pad,border:{display:false}}
-      },
-      interaction:{mode:'index',intersect:false}
-    }
-  });
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        animation:{duration:1400,easing:'easeInOutQuart'},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            backgroundColor:'rgba(13,13,22,.97)',
+            borderColor:'rgba(124,106,247,.5)',
+            borderWidth:1,
+            titleColor:'#f0effe',
+            bodyColor:'#9898b8',
+            padding:12,
+            cornerRadius:12,
+            displayColors:false,
+            callbacks:{
+              title:i=>`${i[0].label}`,
+              label:i=>{
+                const v=i.parsed.y;
+                const tag=v===mn?' 🎯 Lowest':v===mx?' ⚠ Highest':'';
+                return `  ${sym}${v.toLocaleString()}${tag}`;
+              }
+            }
+          }
+        },
+        scales:{
+          x:{
+            grid:{color:'rgba(255,255,255,.05)',drawBorder:false},
+            ticks:{color:'#5a5a78',font:{size:11,family:"DM Sans"}},
+            border:{display:false}
+          },
+          y:{
+            grid:{color:'rgba(255,255,255,.05)',drawBorder:false},
+            ticks:{
+              color:'#5a5a78',
+              font:{size:11,family:"DM Sans"},
+              callback:v=>`${sym}${parseFloat(v).toLocaleString()}`
+            },
+            min:Math.max(0,mn-pad),
+            max:mx+pad,
+            border:{display:false}
+          }
+        },
+        interaction:{mode:'index',intersect:false}
+      }
+    });
+  }catch(e){
+    console.error('Chart error:',e);
+  }
 }
 
 // ── Prices with currency ──────────────────────────────────────────────────
@@ -785,7 +852,10 @@ function refreshPrices(d){
   const sav=cnum&&bnum&&cnum>bnum?`<i class="bi bi-lightbulb-fill me-1"></i>Save <b>${sym}${(cnum-bnum).toFixed(2)}</b> by buying from <b>${plats[pnums.indexOf(bnum)]?.name}</b>!`:'';
   G('savingsD').innerHTML=sav;
   G('histMeta').innerHTML=`<span><i class="bi bi-arrow-down-circle-fill me-1" style="color:var(--gn)"></i>Lowest:<b style="color:var(--gn)">${cvt(d.lowestPrice)||'—'}</b></span><span><i class="bi bi-arrow-up-circle-fill me-1" style="color:var(--rd)"></i>Highest:<b style="color:var(--rd)">${cvt(d.highestPrice)||'—'}</b></span><span><i class="bi bi-circle-fill me-1" style="font-size:8px;color:var(--ac2)"></i>Current:<b style="color:var(--ac2)">${cvt(d.currentPrice)||'—'}</b></span>`;
-  if(d.priceHistory)renderChart(d.priceHistory);
+  if(d.priceHistory&&d.priceHistory.length){
+    // Pre-render chart data so it's ready when user clicks tab
+    setTimeout(()=>renderChart(d.priceHistory),200);
+  }
 }
 
 // ── AI Chat ───────────────────────────────────────────────────────────────
@@ -825,6 +895,13 @@ function reanalyze(){
 }
 
 // ── Main go ───────────────────────────────────────────────────────────────
+function analyzeAlt(name){
+  G('urlInput').value=name;
+  toast(`Analyzing: ${name}`,'bi-lightning-fill','var(--am)');
+  window.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(go,300);
+}
+
 async function go(){
   const url=G('urlInput').value.trim();
   if(!url){G('urlInput').focus();toast('Please enter a URL','bi-exclamation-circle','var(--rd)');return;}
@@ -977,6 +1054,56 @@ function render(d){
 
   // Chat
   G('chatProdLbl').textContent=d.productName||'this product';
+
+  // Name input badge
+  const nib=G('nameInputBadge');
+  if(nib) nib.style.display=d.isNameInput?'inline':'none';
+
+  // Alternatives
+  const alts=d.alternatives||[];
+  const altC=G('altCards');
+  if(altC){
+    const tierLabel={same_price:'Same Price Range',premium:'Premium Upgrade',budget:'Budget Option'};
+    const tierColor={same_price:'var(--ac2)',premium:'var(--am)',budget:'var(--gn)'};
+    if(alts.length){
+      altC.innerHTML=alts.map((a,i)=>{
+        const tc=tierColor[a.tier]||'var(--ac2)';
+        const tl=tierLabel[a.tier]||'Alternative';
+        const searchUrl=a.search_url||`https://www.amazon.in/s?k=${encodeURIComponent(a.name||'')}`;
+        return `<div style="background:var(--s2);border:1px solid var(--b2);border-radius:13px;padding:15px;margin-bottom:10px;transition:all .2s;cursor:pointer"
+          onmouseover="this.style.borderColor='rgba(124,106,247,.4)';this.style.transform='translateX(4px)'"
+          onmouseout="this.style.borderColor='var(--b2)';this.style.transform=''"
+          onclick="analyzeAlt('${(a.name||'').replace(/'/g,"\'")}')">
+          <div style="display:flex;align-items:start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+                <span style="font-size:13px;font-weight:600;color:var(--tx)">${a.name||'Alternative'}</span>
+                <span style="font-size:10px;padding:2px 9px;border-radius:20px;font-weight:600;background:${tc}18;color:${tc};border:1px solid ${tc}44">${tl}</span>
+              </div>
+              <div style="font-size:12px;color:var(--mt2);margin-bottom:5px">${a.why_better||a.reason||''}</div>
+              <div style="font-size:11px;color:var(--mt)">${a.reason||''}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--gn)">${a.price||'—'}</div>
+              <div style="font-size:11px;color:var(--am);margin-top:2px">${a.rating?a.rating+'★':''}</div>
+              <div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end">
+                <a href="${searchUrl}" target="_blank" onclick="event.stopPropagation()" rel="noopener"
+                  style="font-size:11px;padding:4px 10px;border-radius:8px;background:var(--s3);color:var(--mt2);border:1px solid var(--b2);text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+                  <i class="bi bi-search"></i>Search
+                </a>
+                <button onclick="event.stopPropagation();analyzeAlt('${(a.name||'').replace(/'/g,"\'")}');"
+                  style="font-size:11px;padding:4px 10px;border-radius:8px;background:rgba(124,106,247,.12);color:var(--ac3);border:1px solid rgba(124,106,247,.25);cursor:pointer">
+                  <i class="bi bi-lightning-fill me-1"></i>Analyze
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    } else {
+      altC.innerHTML='<p style="color:var(--mt);font-size:13px;text-align:center;padding:20px">No alternative recommendations available</p>';
+    }
+  }
   G('cs-sc').textContent=s+'/100';G('cs-pr').textContent=cvt(d.bestPrice)||'--';G('cs-rt').textContent=(d.avgRating||'--')+(d.avgRating?' ★':'');
   G('chatWin').innerHTML=`<div class="cmsg ai">Hi! I've analyzed <b>${d.productName||'this product'}</b> — Score: <b style="color:${col}">${s}/100</b> (${vl}). Ask me anything!</div>`;
 

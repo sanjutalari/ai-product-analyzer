@@ -156,6 +156,8 @@ async def analyze(req: AnalyzeRequest, bg: BackgroundTasks):
         "modelsUsed":           lr.get("models_used", 1),
         "consensusConfidence":  lr.get("consensus_confidence", 50),
         "scoreBreakdown":       sc.get("breakdown", {}),
+        "alternatives":         lr.get("alternatives", []),
+        "isNameInput":          pd2.get("is_name_input", False),
     }
 
     bg.add_task(save_product_analysis, url, result)

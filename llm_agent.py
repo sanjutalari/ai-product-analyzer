@@ -1,46 +1,45 @@
 """
-llm_agent.py — Multi-model consensus + chain-of-thought + competitor benchmarking
-Uses 3 Groq models in parallel, merges results, dramatically improves accuracy.
+llm_agent.py
+Multi-model consensus AI analysis.
+- Works with product URLs AND plain product names
+- Generates alternative/recommended products
+- Chain-of-thought prompting for accuracy
 """
 import asyncio, json, logging, os, re
 from groq import Groq
 
 log = logging.getLogger(__name__)
 
-# All free on Groq
 MODELS = [
-    "llama-3.3-70b-versatile",   # Primary — best reasoning
-    "mixtral-8x7b-32768",         # Secondary — different architecture
-    "gemma2-9b-it",               # Tertiary — fast cross-check
+    "llama-3.3-70b-versatile",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it",
 ]
 
 CATEGORY_WEIGHTS = {
-    "headphones":    {"quality":0.25,"value":0.20,"reviews":0.30,"features":0.25},
-    "earbuds":       {"quality":0.25,"value":0.20,"reviews":0.30,"features":0.25},
-    "smartphone":    {"quality":0.30,"value":0.20,"reviews":0.25,"features":0.25},
-    "laptop":        {"quality":0.30,"value":0.25,"reviews":0.20,"features":0.25},
-    "tablet":        {"quality":0.28,"value":0.25,"reviews":0.22,"features":0.25},
-    "smartwatch":    {"quality":0.25,"value":0.25,"reviews":0.25,"features":0.25},
-    "camera":        {"quality":0.35,"value":0.20,"reviews":0.25,"features":0.20},
-    "tv":            {"quality":0.35,"value":0.20,"reviews":0.25,"features":0.20},
-    "speaker":       {"quality":0.30,"value":0.20,"reviews":0.30,"features":0.20},
-    "keyboard":      {"quality":0.25,"value":0.30,"reviews":0.25,"features":0.20},
-    "mouse":         {"quality":0.25,"value":0.30,"reviews":0.25,"features":0.20},
-    "default":       {"quality":0.30,"value":0.25,"reviews":0.25,"features":0.20},
+    "headphones":  {"quality":0.25,"value":0.20,"reviews":0.30,"features":0.25},
+    "earbuds":     {"quality":0.25,"value":0.20,"reviews":0.30,"features":0.25},
+    "smartphone":  {"quality":0.30,"value":0.20,"reviews":0.25,"features":0.25},
+    "laptop":      {"quality":0.30,"value":0.25,"reviews":0.20,"features":0.25},
+    "tablet":      {"quality":0.28,"value":0.25,"reviews":0.22,"features":0.25},
+    "smartwatch":  {"quality":0.25,"value":0.25,"reviews":0.25,"features":0.25},
+    "camera":      {"quality":0.35,"value":0.20,"reviews":0.25,"features":0.20},
+    "tv":          {"quality":0.35,"value":0.20,"reviews":0.25,"features":0.20},
+    "speaker":     {"quality":0.30,"value":0.20,"reviews":0.30,"features":0.20},
+    "default":     {"quality":0.30,"value":0.25,"reviews":0.25,"features":0.20},
 }
 
-CATEGORY_KEYWORDS = {
-    "headphones":  ["headphone","headset","over-ear","on-ear","wh-","xm","studio"],
-    "earbuds":     ["earbud","airpod","tws","in-ear","buds","pod"],
-    "smartphone":  ["phone","iphone","galaxy","pixel","redmi","oneplus","realme","poco"],
-    "laptop":      ["laptop","macbook","notebook","thinkpad","chromebook","zenbook"],
-    "tablet":      ["tablet","ipad","galaxy tab","fire hd"],
-    "smartwatch":  ["watch","band","fitbit","garmin","amazfit"],
-    "camera":      ["camera","dslr","mirrorless","gopro","lens"],
-    "tv":          ["tv","television","oled","qled","monitor","display"],
-    "speaker":     ["speaker","echo","soundbar","bluetooth speaker","home pod"],
-    "keyboard":    ["keyboard","keychron","mechanical"],
-    "mouse":       ["mouse","trackpad","logitech mx"],
+CATEGORY_KW = {
+    "headphones": ["headphone","headset","over-ear","on-ear","wh-","xm","qc"],
+    "earbuds":    ["earbud","airpod","tws","in-ear","buds","pod","freebuds"],
+    "smartphone": ["phone","iphone","galaxy","pixel","redmi","oneplus","realme","poco","vivo","oppo","motorola"],
+    "laptop":     ["laptop","macbook","notebook","thinkpad","chromebook","zenbook","vivobook"],
+    "tablet":     ["tablet","ipad","galaxy tab","fire hd"],
+    "smartwatch": ["watch","band","fitbit","garmin","amazfit","mi band","fire-boltt"],
+    "camera":     ["camera","dslr","mirrorless","gopro","lens"],
+    "tv":         ["tv","television","oled","qled","monitor","display"],
+    "speaker":    ["speaker","echo","soundbar","bluetooth speaker","homepod"],
+    "default":    [],
 }
 
 
@@ -50,92 +49,82 @@ class LLMAgent:
 
     def _detect_category(self, pd: dict) -> str:
         text = f"{pd.get('name','')} {pd.get('description','')} {' '.join(pd.get('tags',[]))}".lower()
-        for cat, kws in CATEGORY_KEYWORDS.items():
-            if any(kw in text for kw in kws):
+        for cat, kws in CATEGORY_KW.items():
+            if kws and any(kw in text for kw in kws):
                 return cat
         return "default"
 
-    def _chat(self, prompt: str, model: str, max_tokens: int = 1400) -> str:
+    def _chat(self, prompt: str, model: str, max_tokens: int = 1500) -> str:
         try:
             r = self.client.chat.completions.create(
                 model=model,
                 messages=[
-                    {"role": "system", "content": "You are an expert product analyst. Always respond with valid JSON only. No markdown. No explanation. Just the JSON object."},
+                    {"role": "system", "content": "You are an expert product analyst. Always respond with valid JSON only. No markdown. No extra text. Just the JSON."},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=max_tokens,
-                temperature=0.2,
+                temperature=0.15,
             )
             return r.choices[0].message.content
         except Exception as e:
-            log.error(f"Model {model} failed: {e}")
+            log.error(f"Model {model} error: {e}")
             return ""
 
     def _parse(self, raw: str) -> dict:
-        if not raw:
-            return {}
+        if not raw: return {}
         raw = raw.strip()
         if "```" in raw:
             parts = raw.split("```")
             raw = parts[1] if len(parts) > 1 else parts[0]
-            if raw.startswith("json"):
-                raw = raw[4:]
-        start = raw.find("{")
-        end   = raw.rfind("}") + 1
-        if start < 0 or end <= start:
-            return {}
-        try:
-            return json.loads(raw[start:end])
-        except:
-            return {}
+            if raw.startswith("json"): raw = raw[4:]
+        s, e = raw.find("{"), raw.rfind("}") + 1
+        if s < 0 or e <= s: return {}
+        try:    return json.loads(raw[s:e])
+        except: return {}
 
     def _build_prompt(self, pd: dict, category: str) -> str:
-        name   = pd.get("name", "Unknown")
-        price  = pd.get("price", "")
-        asin   = pd.get("asin", "")
-        url    = pd.get("url", "")
-        specs  = pd.get("specifications", {})
-        desc   = pd.get("description", "")[:400]
-        revs   = pd.get("raw_reviews", [])[:6]
+        name  = pd.get("name", "Unknown")
+        price = pd.get("price", "")
+        asin  = pd.get("asin", "")
+        url   = pd.get("url", "")
+        specs = pd.get("specifications", {})
+        desc  = pd.get("description", "")[:400]
+        revs  = pd.get("raw_reviews", [])[:6]
         spec_t = "\n".join(f"  {k}: {v}" for k, v in list(specs.items())[:15]) or "  N/A"
+        rev_t  = "\n".join(f"  [{r.get('rating',3)}★] {r.get('text','')[:120]}" for r in revs) or "  None"
 
-        product_ref = f"Amazon ASIN: {asin}" if asin else f"Product: {name}"
-        if url:
-            product_ref += f"\nURL: {url}"
+        ref = f"ASIN: {asin}" if asin else f"Product: {name}"
+        if url: ref += f"\nURL: {url}"
 
-        reviews_text = ""
-        if revs:
-            reviews_text = "\nCUSTOMER REVIEWS:\n" + "\n".join(
-                f"  [{r.get('rating',3)}★] {r.get('text','')[:150]}"
-                for r in revs
-            )
+        return f"""Analyze this product as a world-class product expert. Use ALL your knowledge.
 
-        return f"""You are a world-class product analyst. Use chain-of-thought reasoning.
-
-STEP 1 — IDENTIFY: {product_ref}
-Category detected: {category}
+PRODUCT IDENTIFICATION:
+{ref}
 Price: {price}
+Category: {category}
 Description: {desc}
 
-STEP 2 — ANALYZE SPECS:
+SPECIFICATIONS:
 {spec_t}
-{reviews_text}
 
-STEP 3 — CROSS-REFERENCE: Use your training knowledge about this exact product model.
-If you recognize the ASIN or product name, use your full knowledge of real-world performance,
-known issues, expert reviews, and user feedback from across the internet.
+CUSTOMER REVIEWS SAMPLE:
+{rev_t}
 
-STEP 4 — SCORE HONESTLY: Do not give inflated scores. Be critical and precise.
-Category "{category}" scoring focus: {json.dumps(CATEGORY_WEIGHTS.get(category, CATEGORY_WEIGHTS["default"]))}
+INSTRUCTIONS:
+1. If you recognize this product (by ASIN, name, or model number), use your FULL knowledge
+2. Be honest and critical — do NOT give inflated scores
+3. Score weights for {category}: {json.dumps(CATEGORY_WEIGHTS.get(category, CATEGORY_WEIGHTS["default"]))}
+4. Alternatives must be REAL products that are actually better in some way
+5. For alternatives: include products from same price range AND premium tier
 
-STEP 5 — OUTPUT this exact JSON:
+Return ONLY this JSON (no markdown):
 {{
-  "productName": "Full official product name with model number",
-  "estimatedPrice": "$X.XX",
+  "productName": "Full official product name with model number and variant",
+  "estimatedPrice": "$X.XX or ₹X,XXX",
   "category": "{category}",
-  "summary": "3-sentence expert verdict covering real-world performance, value, and who it's for",
+  "summary": "3 sentences: real-world performance, key strength, key weakness, verdict",
   "pros": [
-    "Specific measurable pro (e.g. 30hr battery life, not just 'long battery')",
+    "Specific measurable pro (e.g. 30hr battery, not just good battery)",
     "Specific pro 2",
     "Specific pro 3",
     "Specific pro 4"
@@ -145,12 +134,41 @@ STEP 5 — OUTPUT this exact JSON:
     "Specific con 2",
     "Specific con 3"
   ],
-  "ideal_buyer": "Precise description of who benefits most",
-  "avoid_if": "Precise description of who should avoid this",
+  "ideal_buyer": "Precise 1-sentence description of ideal buyer",
+  "avoid_if": "Precise 1-sentence description of who should avoid",
   "competitors": [
-    {{"name": "Competitor 1", "vs": "better/worse/similar", "reason": "why"}},
-    {{"name": "Competitor 2", "vs": "better/worse/similar", "reason": "why"}},
-    {{"name": "Competitor 3", "vs": "better/worse/similar", "reason": "why"}}
+    {{"name": "Competitor 1", "vs": "better", "reason": "specific reason why", "price": "approx price"}},
+    {{"name": "Competitor 2", "vs": "similar", "reason": "how they compare", "price": "approx price"}},
+    {{"name": "Competitor 3", "vs": "worse", "reason": "why this product wins", "price": "approx price"}}
+  ],
+  "alternatives": [
+    {{
+      "name": "Product Name with Model",
+      "reason": "Why this is a good alternative — specific advantage",
+      "price": "₹X,XXX or $XX",
+      "rating": 4.5,
+      "why_better": "What it does better than the analyzed product",
+      "search_url": "https://www.amazon.in/s?k=product+name+model",
+      "tier": "same_price"
+    }},
+    {{
+      "name": "Premium Alternative Name",
+      "reason": "Why worth the extra cost",
+      "price": "₹X,XXX or $XX",
+      "rating": 4.7,
+      "why_better": "Specific improvement over analyzed product",
+      "search_url": "https://www.amazon.in/s?k=premium+product+name",
+      "tier": "premium"
+    }},
+    {{
+      "name": "Budget Alternative Name",
+      "reason": "Best value option",
+      "price": "₹X,XXX or $XX",
+      "rating": 4.2,
+      "why_better": "Good enough for most people at lower cost",
+      "search_url": "https://www.amazon.in/s?k=budget+product+name",
+      "tier": "budget"
+    }}
   ],
   "avg_rating": 4.2,
   "review_count": "2,500+",
@@ -164,50 +182,33 @@ STEP 5 — OUTPUT this exact JSON:
   "confidence": 85
 }}"""
 
-    def _merge_results(self, results: list[dict], category: str) -> dict:
-        """Merge outputs from multiple models using weighted consensus."""
+    def _merge(self, results: list[dict], category: str) -> dict:
         valid = [r for r in results if r and r.get("productName")]
-        if not valid:
-            return results[0] if results else {}
-        if len(valid) == 1:
-            return valid[0]
+        if not valid: return results[0] if results else {}
+        if len(valid) == 1: return valid[0]
 
-        # Use highest-confidence result as base
         base = max(valid, key=lambda x: x.get("confidence", 50))
 
-        # Average quality indicators across all valid models
+        # Average quality indicators
         qi_keys = ["build_quality", "performance", "value_for_money", "reliability"]
         merged_qi = {}
         for k in qi_keys:
             vals = [r.get("quality_indicators", {}).get(k, 70) for r in valid if r.get("quality_indicators")]
             merged_qi[k] = int(sum(vals) / len(vals)) if vals else 70
 
-        # Merge pros — keep ones mentioned by 2+ models, then fill from base
-        all_pros = []
-        for r in valid:
-            all_pros.extend(r.get("pros", []))
-        # Deduplicate by keyword overlap
-        base_pros = base.get("pros", [])
-        if len(valid) >= 2:
-            # Take base pros but validate against other models
-            validated_pros = []
-            for pro in base_pros:
-                pro_lower = pro.lower()
-                confirmed = sum(
-                    1 for r in valid if r != base
-                    and any(w in " ".join(r.get("pros", [])).lower() for w in pro_lower.split()[:3])
-                )
-                validated_pros.append(pro)
-            base["pros"] = validated_pros[:5] if validated_pros else base_pros
-
-        # Average avg_rating
+        # Average ratings
         ratings = [r.get("avg_rating", 0) for r in valid if r.get("avg_rating", 0) > 0]
-        if ratings:
-            base["avg_rating"] = round(sum(ratings) / len(ratings), 1)
+        if ratings: base["avg_rating"] = round(sum(ratings) / len(ratings), 1)
 
         base["quality_indicators"] = merged_qi
         base["models_used"] = len(valid)
         base["consensus_confidence"] = int(sum(r.get("confidence", 50) for r in valid) / len(valid))
+
+        # Use alternatives from highest-confidence model (they need to be specific)
+        for r in valid:
+            if r.get("alternatives") and len(r["alternatives"]) >= 2:
+                base["alternatives"] = r["alternatives"]
+                break
 
         return base
 
@@ -215,54 +216,50 @@ STEP 5 — OUTPUT this exact JSON:
         category = self._detect_category(pd)
         prompt   = self._build_prompt(pd, category)
 
-        # Run all 3 models in parallel
         loop = asyncio.get_event_loop()
         tasks = [
-            loop.run_in_executor(None, self._chat, prompt, model, 1400)
+            loop.run_in_executor(None, self._chat, prompt, model, 1500)
             for model in MODELS
         ]
-        raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+        raws = await asyncio.gather(*tasks, return_exceptions=True)
 
-        # Parse each result
         parsed = []
-        for i, raw in enumerate(raw_results):
+        for i, raw in enumerate(raws):
             if isinstance(raw, Exception):
-                log.warning(f"Model {MODELS[i]} error: {raw}")
+                log.warning(f"Model {MODELS[i]}: {raw}")
                 continue
             p = self._parse(raw)
             if p:
                 parsed.append(p)
-                log.info(f"Model {MODELS[i]}: confidence={p.get('confidence','?')}, name={p.get('productName','?')}")
+                log.info(f"Model {MODELS[i]}: conf={p.get('confidence','?')} name={p.get('productName','?')}")
 
         if not parsed:
-            log.error("All models failed")
-            return self._fallback(pd)
+            return self._fallback(pd, category)
 
-        # Merge results from all models
-        merged = self._merge_results(parsed, category)
+        merged = self._merge(parsed, category)
 
-        # Enrich with scraped data if AI missed it
+        # Enrich scraped data
         if not pd.get("price") and merged.get("estimatedPrice"):
             pd["price"] = merged["estimatedPrice"]
-
         if merged.get("tags") and pd.get("tags"):
             merged["tags"] = list(set(merged["tags"] + pd["tags"]))[:8]
 
         merged["detected_category"] = category
         return merged
 
-    def _fallback(self, pd: dict) -> dict:
+    def _fallback(self, pd: dict, category: str) -> dict:
         name = pd.get("name", "Product")
         return {
             "productName": name,
             "estimatedPrice": pd.get("price", ""),
-            "category": "default",
+            "category": category,
             "summary": f"Could not complete analysis for {name}. Please try again.",
             "pros": ["Product available for purchase"],
             "cons": ["Analysis incomplete — please retry"],
             "ideal_buyer": "Verify product details before purchasing.",
-            "avoid_if": "You need complete analysis before deciding.",
+            "avoid_if": "You need a complete analysis before deciding.",
             "competitors": [],
+            "alternatives": [],
             "tags": pd.get("tags", []),
             "avg_rating": 0,
             "review_count": "0",
