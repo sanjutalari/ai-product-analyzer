@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Find My Product | AI Product Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface-variant": "rgb(73 68 86 / <alpha-value>)",
+                    "surface-container": "rgb(238 238 240 / <alpha-value>)",
+                    "on-tertiary-fixed-variant": "rgb(71 71 70 / <alpha-value>)",
+                    "surface": "rgb(249 249 251 / <alpha-value>)",
+                    "on-primary-fixed": "rgb(34 0 93 / <alpha-value>)",
+                    "on-tertiary-container": "rgb(201 199 198 / <alpha-value>)",
+                    "surface-container-low": "rgb(243 243 245 / <alpha-value>)",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "rgb(240 240 242 / <alpha-value>)",
+                    "error-container": "rgb(255 218 214 / <alpha-value>)",
+                    "tertiary-fixed-dim": "rgb(200 198 197 / <alpha-value>)",
+                    "on-tertiary-fixed": "rgb(27 28 28 / <alpha-value>)",
+                    "on-secondary-fixed": "rgb(0 32 28 / <alpha-value>)",
+                    "on-primary-container": "rgb(208 190 255 / <alpha-value>)",
+                    "on-background": "rgb(26 28 29 / <alpha-value>)",
+                    "outline-variant": "rgb(203 195 217 / <alpha-value>)",
+                    "background": "rgb(249 249 251 / <alpha-value>)",
+                    "on-secondary-container": "rgb(0 111 100 / <alpha-value>)",
+                    "outline": "rgb(122 116 136 / <alpha-value>)",
+                    "surface-tint": "rgb(109 35 249 / <alpha-value>)",
+                    "on-secondary-fixed-variant": "rgb(0 80 72 / <alpha-value>)",
+                    "primary-fixed": "rgb(232 221 255 / <alpha-value>)",
+                    "error": "#ba1a1a",
+                    "secondary": "#006a60",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "rgb(207 189 255 / <alpha-value>)",
+                    "primary": "rgb(72 0 178 / <alpha-value>)",
+                    "surface-variant": "rgb(226 226 228 / <alpha-value>)",
+                    "surface-dim": "rgb(217 218 220 / <alpha-value>)",
+                    "primary-container": "rgb(98 0 238 / <alpha-value>)",
+                    "on-primary": "#ffffff",
+                    "on-error-container": "rgb(147 0 10 / <alpha-value>)",
+                    "tertiary-fixed": "rgb(229 226 225 / <alpha-value>)",
+                    "secondary-container": "rgb(74 248 227 / <alpha-value>)",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-bright": "rgb(249 249 251 / <alpha-value>)",
+                    "tertiary-container": "rgb(84 83 83 / <alpha-value>)",
+                    "on-primary-fixed-variant": "rgb(83 0 205 / <alpha-value>)",
+                    "on-surface": "rgb(26 28 29 / <alpha-value>)",
+                    "surface-container-high": "rgb(232 232 234 / <alpha-value>)",
+                    "surface-container-highest": "rgb(226 226 228 / <alpha-value>)",
+                    "secondary-fixed-dim": "rgb(23 222 202 / <alpha-value>)",
+                    "tertiary": "rgb(60 60 60 / <alpha-value>)",
+                    "secondary-fixed": "rgb(79 251 230 / <alpha-value>)",
+                    "on-tertiary": "#ffffff",
+                    "inverse-primary": "rgb(207 189 255 / <alpha-value>)",
+                    "inverse-surface": "rgb(47 49 50 / <alpha-value>)"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .float-animation {
+            animation: float 4s ease-in-out infinite;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-gradient {
+            background: linear-gradient(135deg, #4800b2 0%, #6200ee 100%);
+        }
+        .dark .editorial-gradient {
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+        }
+        .glass-panel {
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            background-color: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .dark .glass-panel {
+            background-color: rgba(30, 30, 45, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .card-3d {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        .card-3d:hover {
+            transform: translateY(-8px) rotateX(4deg) rotateY(-2deg);
+            box-shadow: 0 30px 60px -12px rgba(26,28,29,0.12), 0 18px 36px -18px rgba(26,28,29,0.15);
+        }
+        .dark .card-3d:hover {
+            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.4), 0 18px 36px -18px rgba(0,0,0,0.5);
+        }
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .scroll-reveal.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        /* Dark Mode Base Colors */
+        .dark {
+            color-scheme: dark;
+        }
+        .dark .bg-surface {
+            background-color: #0f1117;
+        }
+        .dark .bg-surface-container-lowest {
+            background-color: #161b22;
+        }
+        .dark .bg-surface-container-low {
+            background-color: #1c2128;
+        }
+        .dark .bg-surface-container-high {
+            background-color: #262d34;
+        }
+        .dark .bg-surface-container {
+            background-color: #2d333b;
+        }
+        .dark .text-on-surface {
+            color: #e6edf3;
+        }
+        .dark .text-on-surface-variant {
+            color: #8b949e;
+        }
+        .dark .bg-\[#f9f9fb\] {
+            background-color: #0f1117;
+        }
+        .dark .bg-\[#f3f3f5\] {
+            background-color: #1c2128;
+        }
+        .dark .text-\[#1a1c1d\] {
+            color: #e6edf3;
+        }
+        .dark .bg-surface-container-low\/50 {
+            background-color: rgba(28, 33, 40, 0.5);
+        }
+        .dark .border-outline-variant\/10 {
+            border-color: rgba(139, 148, 158, 0.1);
+        }
+        .dark .border-outline-variant\/15 {
+            border-color: rgba(139, 148, 158, 0.15);
+        }
+        .dark .bg-red-100 {
+            background-color: #3d2817;
+        }
+        .dark .text-red-600 {
+            color: #f85149;
+        }
+        .dark .text-red-600 {
+            color: #f85149;
+        }
+        .dark .bg-secondary-container {
+            background-color: #0d3c36;
+        }
+        .dark .text-on-secondary-container {
+            color: #4ffbe6;
+        }
+        .dark .shadow-\[0_12px_40px_rgba\(26\,28\,29\,0.06\)\] {
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+        .dark .shadow-\[0_30px_60px_rgba\(26\,28\,29\,0.1\)\] {
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+        .dark .shadow-\[inset_0_2px_10px_rgba\(0\,0\,0\,0.02\)\] {
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .dark .bg-primary\/10 {
+            background-color: rgba(124, 58, 237, 0.1);
+        }
+        .dark .bg-primary\/20 {
+            background-color: rgba(124, 58, 237, 0.2);
+        }
+        .dark .bg-primary\/30 {
+            background-color: rgba(124, 58, 237, 0.3);
+        }
+        .dark .bg-primary\/40 {
+            background-color: rgba(124, 58, 237, 0.4);
+        }
+        .dark .text-primary {
+            color: #a78bfa;
+        }
+    </style>
+</head>
+<body class="bg-surface dark:bg-[#0f1117] text-on-surface dark:text-[#e6edf3] font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 bg-[#f9f9fb]/70 dark:bg-[#0f1117]/70 backdrop-blur-xl shadow-[0_12px_40px_rgba(26,28,29,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.3)] flex justify-between items-center px-8 py-4 max-w-full mx-auto">
+<div class="text-2xl font-bold tracking-tighter text-[#1a1c1d] dark:text-[#e6edf3] font-headline">Find My Product</div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="font-['Plus_Jakarta_Sans'] text-sm tracking-tight text-[#1a1c1d] dark:text-[#8b949e] hover:text-[#4800b2] dark:hover:text-[#a78bfa] transition-colors" href="#">Analysis</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm tracking-tight text-[#1a1c1d] dark:text-[#8b949e] hover:text-[#4800b2] dark:hover:text-[#a78bfa] transition-colors" href="#">Reviews</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm tracking-tight text-[#1a1c1d] dark:text-[#8b949e] hover:text-[#4800b2] dark:hover:text-[#a78bfa] transition-colors" href="#">Community</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm tracking-tight text-[#1a1c1d] dark:text-[#8b949e] hover:text-[#4800b2] dark:hover:text-[#a78bfa] transition-colors" href="#">Enterprise</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm tracking-tight text-[#1a1c1d] dark:text-[#8b949e] hover:text-[#4800b2] dark:hover:text-[#a78bfa] transition-colors" href="#">Resources</a>
+</div>
+<div class="flex items-center gap-4">
+<button id="darkModeToggle" class="relative inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container-low dark:hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[#1a1c1d] dark:text-[#e6edf3] dark:hidden" data-icon="light_mode">light_mode</span>
+<span class="material-symbols-outlined text-[#e6edf3] hidden dark:block" data-icon="dark_mode">dark_mode</span>
+</button>
+</div>
+</nav>
+<main class="pt-32 pb-20">
+<!-- Hero Section -->
+<section class="max-w-7xl mx-auto px-6 text-center mb-24 scroll-reveal">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-surface-container-low dark:bg-surface-container rounded-full mb-8 shadow-inner">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant dark:text-[#8b949e] font-label">v2.0 Analysis Engine Live</span>
+</div>
+<h1 class="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter text-on-surface dark:text-[#e6edf3] mb-6 max-w-4xl mx-auto leading-[1.1]">
+            Analyze Any Product with <span class="text-primary dark:text-[#a78bfa] italic inline-block float-animation">AI Intelligence</span>
+</h1>
+<p class="font-body text-lg text-on-surface-variant dark:text-[#8b949e] max-w-2xl mx-auto mb-12 leading-relaxed">
+            Paste any URL — we scrape, fetch images, search the web for reviews, and give you a deep AI-powered analysis in your currency.
+        </p>
+<div class="max-w-3xl mx-auto bg-surface-container-lowest dark:bg-surface-container-high p-2 rounded-2xl shadow-[0_30px_60px_rgba(26,28,29,0.1)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.3)] flex flex-col md:flex-row gap-2 border border-outline-variant/15 glass-panel">
+<div class="flex-grow flex items-center px-4 gap-3 bg-surface-container-high/50 dark:bg-surface-container-low/50 rounded-xl">
+<span class="material-symbols-outlined text-outline dark:text-[#8b949e]" data-icon="link">link</span>
+<input class="w-full bg-transparent border-none focus:ring-0 text-on-surface dark:text-[#e6edf3] py-4 placeholder:text-outline dark:placeholder:text-[#8b949e] font-body" placeholder="Paste product URL or type product name..." type="text"/>
+</div>
+<button class="editorial-gradient text-on-primary px-10 py-4 rounded-xl font-headline font-bold text-lg shadow-lg hover:shadow-primary/20 transition-all active:scale-95">
+                Analyze
+            </button>
+</div>
+</section>
+<!-- Bento Grid Features -->
+<section class="max-w-7xl mx-auto px-6 mb-32">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8 auto-rows-[260px]">
+<!-- Smart Scraping (Double Width) -->
+<div class="md:col-span-8 bg-surface-container-lowest dark:bg-surface-container-high rounded-2xl p-8 shadow-[0_12px_40px_rgba(26,28,29,0.04)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.2)] flex flex-col justify-between border border-outline-variant/10 group card-3d scroll-reveal">
+<div class="flex justify-between items-start">
+<div class="w-14 h-14 bg-primary-fixed dark:bg-primary/20 rounded-xl flex items-center justify-center text-primary dark:text-[#a78bfa] shadow-sm">
+<span class="material-symbols-outlined text-2xl" data-icon="data_object">data_object</span>
+</div>
+<span class="font-label text-[10px] uppercase tracking-widest text-secondary font-bold bg-secondary/10 dark:bg-secondary/20 px-2 py-1 rounded">Real-time Data</span>
+</div>
+<div>
+<h3 class="font-headline text-2xl font-bold mb-2 text-on-surface dark:text-[#e6edf3]">Smart Scraping</h3>
+<p class="text-on-surface-variant dark:text-[#8b949e] text-base max-w-md">Our specialized engines bypass bot detection to pull live pricing, specifications, and availability directly from the source.</p>
+</div>
+</div>
+<!-- YouTube Reviews -->
+<div class="md:col-span-4 bg-surface-container-low dark:bg-surface-container rounded-2xl p-8 flex flex-col justify-between group overflow-hidden relative card-3d scroll-reveal">
+<div class="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center text-red-600 dark:text-red-400 shadow-sm">
+<span class="material-symbols-outlined text-2xl" data-icon="play_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+</div>
+<div>
+<h3 class="font-headline text-2xl font-bold mb-2 text-[#1a1c1d] dark:text-[#e6edf3]">YouTube Reviews</h3>
+<p class="text-on-surface-variant dark:text-[#8b949e] text-base mb-4">Transcribed video insights from top tech creators.</p>
+<div class="space-y-2">
+<a class="inline-flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-xs uppercase tracking-wider group-hover:translate-x-1 transition-transform hover:underline" href="https://www.youtube.com/watch?v=example1" target="_blank" rel="noopener noreferrer">
+📹 Unboxing Review <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+<br/>
+<a class="inline-flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-xs uppercase tracking-wider group-hover:translate-x-1 transition-transform hover:underline" href="https://www.youtube.com/watch?v=example2" target="_blank" rel="noopener noreferrer">
+📹 In-Depth Analysis <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+<br/>
+<a class="inline-flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-xs uppercase tracking-wider group-hover:translate-x-1 transition-transform hover:underline" href="https://www.youtube.com/watch?v=example3" target="_blank" rel="noopener noreferrer">
+📹 Pros & Cons <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+<div class="absolute -right-8 -bottom-8 opacity-10 dark:opacity-5 group-hover:scale-110 transition-transform duration-700">
+<span class="material-symbols-outlined text-9xl text-red-600 dark:text-red-400" data-icon="movie">movie</span>
+</div>
+</div>
+<!-- Web + Reddit -->
+<div class="md:col-span-4 editorial-gradient dark:from-purple-600 dark:to-violet-500 rounded-2xl p-8 flex flex-col justify-between text-on-primary card-3d shadow-xl scroll-reveal">
+<div class="w-14 h-14 bg-white/20 dark:bg-white/10 backdrop-blur rounded-xl flex items-center justify-center border border-white/20">
+<span class="material-symbols-outlined text-2xl text-white" data-icon="forum">forum</span>
+</div>
+<div>
+<h3 class="font-headline text-2xl font-bold mb-2">Web + Reddit</h3>
+<p class="text-on-primary/80 dark:text-white/70 text-base leading-relaxed">Aggregated sentiment analysis from expert review sites and raw community feedback from subreddits.</p>
+</div>
+</div>
+<!-- Price Graph (Double Width) -->
+<div class="md:col-span-8 bg-surface-container-lowest dark:bg-surface-container-high rounded-2xl p-8 shadow-[0_12px_40px_rgba(26,28,29,0.04)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.2)] border border-outline-variant/10 flex flex-col md:flex-row gap-8 card-3d scroll-reveal">
+<div class="flex flex-col justify-between h-full md:w-1/2">
+<div class="w-14 h-14 bg-secondary-fixed-dim/20 dark:bg-secondary/20 rounded-xl flex items-center justify-center text-on-secondary-container dark:text-[#4ffbe6] shadow-sm">
+<span class="material-symbols-outlined text-2xl" data-icon="show_chart">show_chart</span>
+</div>
+<div>
+<h3 class="font-headline text-2xl font-bold mb-2 text-on-surface dark:text-[#e6edf3]">Price Graph</h3>
+<p class="text-on-surface-variant dark:text-[#8b949e] text-base">Visualize pricing trends over 6 months to ensure you're buying at the absolute bottom.</p>
+</div>
+</div>
+<div class="md:w-1/2 bg-surface-container-low/50 dark:bg-surface-container-low/30 rounded-xl p-6 flex flex-col justify-end gap-2 overflow-hidden border border-outline-variant/5">
+<div class="flex items-end gap-2 h-32">
+<div class="bg-primary/20 dark:bg-primary/30 w-full rounded-t-lg transition-all duration-1000 group-hover:bg-primary/30 dark:group-hover:bg-primary/40" style="height: 40%"></div>
+<div class="bg-primary/20 dark:bg-primary/30 w-full rounded-t-lg transition-all duration-1000 group-hover:bg-primary/30 dark:group-hover:bg-primary/40" style="height: 65%"></div>
+<div class="bg-primary/40 dark:bg-primary/50 w-full rounded-t-lg transition-all duration-1000 group-hover:bg-primary/50 dark:group-hover:bg-primary/60" style="height: 55%"></div>
+<div class="bg-primary/40 dark:bg-primary/50 w-full rounded-t-lg transition-all duration-1000 group-hover:bg-primary/50 dark:group-hover:bg-primary/60" style="height: 85%"></div>
+<div class="bg-primary dark:bg-primary w-full rounded-t-lg shadow-lg" style="height: 45%"></div>
+<div class="bg-primary dark:bg-primary w-full rounded-t-lg" style="height: 30%"></div>
+</div>
+</div>
+</div>
+<!-- Currencies -->
+<div class="md:col-span-6 bg-surface-container-high/40 dark:bg-surface-container-high/20 backdrop-blur-sm rounded-2xl p-8 flex items-center gap-6 border border-outline-variant/10 card-3d scroll-reveal">
+<div class="w-16 h-16 bg-surface-container-lowest dark:bg-surface-container-high rounded-2xl flex items-center justify-center text-primary dark:text-[#a78bfa] shadow-lg border border-outline-variant/20">
+<span class="material-symbols-outlined text-3xl" data-icon="currency_exchange">currency_exchange</span>
+</div>
+<div>
+<h3 class="font-headline text-xl font-bold text-on-surface dark:text-[#e6edf3]">7 Local Currencies</h3>
+<p class="text-on-surface-variant dark:text-[#8b949e] text-sm">Live conversion rates for USD, EUR, GBP, JPY, CAD, AUD, and SGD.</p>
+</div>
+</div>
+<!-- Ask AI Terminal -->
+<div class="md:col-span-6 bg-secondary-container dark:bg-teal-900/30 rounded-2xl p-8 flex items-center gap-6 text-on-secondary-container dark:text-[#4ffbe6] card-3d shadow-xl scroll-reveal">
+<div class="w-16 h-16 bg-white/40 dark:bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center text-secondary dark:text-[#4ffbe6] shadow-inner">
+<span class="material-symbols-outlined text-3xl float-animation" data-icon="smart_toy">smart_toy</span>
+</div>
+<div>
+<h3 class="font-headline text-xl font-bold text-on-surface dark:text-[#e6edf3]">Ask AI Terminal</h3>
+<p class="text-on-surface-variant dark:text-[#8b949e] text-sm">Instant chat interface to ask specific questions about performance, durability, or comparisons.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Dynamic Visualization -->
+<section class="max-w-7xl mx-auto px-6 mt-32 scroll-reveal">
+<div class="bg-surface-container-low dark:bg-surface-container rounded-[3rem] p-8 md:p-16 relative overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] dark:shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)] border border-outline-variant/10">
+<div class="absolute top-0 left-0 w-full h-full opacity-10 dark:opacity-5 pointer-events-none" style="background-image: radial-gradient(#4800b2 1.5px, transparent 1.5px); background-size: 32px 32px;"></div>
+<div class="relative z-10 grid md:grid-cols-2 gap-16 items-center">
+<div>
+<h2 class="font-headline text-4xl md:text-5xl font-extrabold tracking-tight mb-8 text-on-surface dark:text-[#e6edf3]">Deep Analysis <br/>Without the Noise</h2>
+<div class="space-y-8">
+<div class="flex gap-5 group">
+<span class="material-symbols-outlined text-primary dark:text-[#a78bfa] bg-primary/10 dark:bg-primary/10 p-2 rounded-lg group-hover:scale-110 transition-transform" data-icon="check_circle">check_circle</span>
+<div>
+<h4 class="font-bold text-on-surface dark:text-[#e6edf3] text-lg">Sentiment Scoring</h4>
+<p class="text-on-surface-variant dark:text-[#8b949e] text-sm">We process 10,000+ words of reviews into a single 0-100 score.</p>
+</div>
+</div>
+<div class="flex gap-5 group">
+<span class="material-symbols-outlined text-primary dark:text-[#a78bfa] bg-primary/10 dark:bg-primary/10 p-2 rounded-lg group-hover:scale-110 transition-transform" data-icon="image">image</span>
+<div>
+<h4 class="font-bold text-on-surface dark:text-[#e6edf3] text-lg">Visual Gallery</h4>
+<p class="text-on-surface-variant dark:text-[#8b949e] text-sm">Automatically fetches the highest resolution product images from across the web.</p>
+</div>
+</div>
+<div class="flex gap-5 group">
+<span class="material-symbols-outlined text-primary dark:text-[#a78bfa] bg-primary/10 dark:bg-primary/10 p-2 rounded-lg group-hover:scale-110 transition-transform" data-icon="compare_arrows">compare_arrows</span>
+<div>
+<h4 class="font-bold text-on-surface dark:text-[#e6edf3] text-lg">Competitor Contrast</h4>
+<p class="text-on-surface-variant dark:text-[#8b949e] text-sm">Immediate comparison tables against the 3 closest alternative products.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest dark:bg-surface-container-high rounded-3xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] dark:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] p-8 border border-outline-variant/10 relative transform hover:rotate-1 hover:scale-[1.02] transition-all duration-700">
+<div class="flex items-center justify-between mb-10">
+<div class="flex gap-2">
+<div class="w-3 h-3 rounded-full bg-error/40 shadow-sm"></div>
+<div class="w-3 h-3 rounded-full bg-secondary/40 shadow-sm"></div>
+<div class="w-3 h-3 rounded-full bg-primary/40 shadow-sm"></div>
+</div>
+<div class="text-[10px] font-bold text-outline dark:text-[#8b949e] uppercase tracking-widest bg-surface-container-high dark:bg-surface-container px-2 py-1 rounded">Analysis Terminal</div>
+</div>
+<div class="space-y-4">
+<div class="h-2.5 bg-surface-container-high dark:bg-surface-container rounded-full w-4/5 animate-pulse"></div>
+<div class="h-2.5 bg-surface-container-high dark:bg-surface-container rounded-full w-3/5"></div>
+<div class="h-56 w-full rounded-2xl overflow-hidden bg-surface-container-high dark:bg-surface-container-low mt-8 shadow-inner border border-outline-variant/5">
+<img class="w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 transition-all duration-1000 scale-105 hover:scale-100" data-alt="professional product photograph of sleek wireless headphones on a minimalist grey background with soft cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhimpkNCJn_nrhyrha8RwhWX_8luwDT-oAddbvZ1yTkdHpoIJem1EKenRcBukJVdj26Fmv5L1aGTdGdS9cp02Q3fbdcCINUjD2pFjfvq-EkMCw_7VoX-_E03RCrCXDZrhXkAzcpjKF1baE6AJ-OlVE2ZPhhUeos72L7j28LLgoZN67_Ihh9p5V72rvECq39WaAt-s5SEnMMnDnUdiKCp-oNlhyjMQ6sw4QGjXK8HIyztDOHV_arHGEh5CM1xBuc9g2URgVgiCD"/>
+</div>
+<div class="flex justify-between items-center mt-10 p-4 rounded-xl bg-surface-container-low dark:bg-surface-container-low/50">
+<div class="flex flex-col">
+<span class="text-[10px] font-bold text-outline dark:text-[#8b949e] uppercase">AI Recommendation</span>
+<span class="text-secondary dark:text-[#4ffbe6] font-bold text-xl">Strong Buy (88/100)</span>
+</div>
+<div class="h-12 w-28 editorial-gradient rounded-xl shadow-lg flex items-center justify-center opacity-90">
+<span class="text-on-primary font-headline font-bold text-xs uppercase tracking-widest">Details</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-[#f3f3f5] dark:bg-[#1c2128] w-full py-12 mt-auto border-t border-outline-variant/10 dark:border-outline-variant/5">
+<div class="flex flex-col md:flex-row justify-between items-center px-12 gap-8 max-w-7xl mx-auto">
+<div class="font-['Plus_Jakarta_Sans'] font-black text-2xl text-on-surface dark:text-[#e6edf3] tracking-tighter">Find My Product</div>
+<div class="flex flex-wrap justify-center gap-10">
+<a class="font-['Inter'] text-xs uppercase tracking-widest text-[#1a1c1d]/60 dark:text-[#8b949e]/70 hover:text-[#4800b2] dark:hover:text-[#a78bfa] transition-colors" href="#">Privacy Policy</a>
+<a class="font-['Inter'] text-xs uppercase tracking-widest text-[#1a1c1d]/60 dark:text-[#8b949e]/70 hover:text-[#4800b2] dark:hover:text-[#a78bfa] transition-colors" href="#">Terms of Service</a>
+<a class="font-['Inter'] text-xs uppercase tracking-widest text-[#1a1c1d]/60 dark:text-[#8b949e]/70 hover:text-[#4800b2] dark:hover:text-[#a78bfa] transition-colors" href="#">API Documentation</a>
+<a class="font-['Inter'] text-xs uppercase tracking-widest text-[#1a1c1d]/60 dark:text-[#8b949e]/70 hover:text-[#4800b2] dark:hover:text-[#a78bfa] transition-colors" href="#">Contact Support</a>
+</div>
+<div class="font-['Inter'] text-[10px] uppercase tracking-widest text-[#1a1c1d]/40 dark:text-[#8b949e]/40 text-center md:text-right">
+            © 2024 Find My Product. <br class="md:hidden"/> Precision Engineered Analysis.
+        </div>
+</div>
+</footer>
+<script>
+    // Dark Mode Toggle Functionality
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const htmlElement = document.documentElement;
+
+    // Check for saved dark mode preference or default to light
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    if (isDarkMode) {
+        htmlElement.classList.add('dark');
+    }
+
+    // Toggle dark mode
+    darkModeToggle.addEventListener('click', () => {
+        htmlElement.classList.toggle('dark');
+        const isDark = htmlElement.classList.contains('dark');
+        localStorage.setItem('darkMode', isDark ? 'true' : 'false');
+    });
+
+    // Simple Scroll Reveal Observer
+    const observerOptions = {
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+
+    // Add smooth scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+</script>
+</body></html>
